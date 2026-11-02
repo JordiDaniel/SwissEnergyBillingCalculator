@@ -108,14 +108,14 @@ public partial class MainWindow : Window
         try
         {
             var folderValidation = ValidateDataFolderStructure(folderPath);
-            var files = folderValidation.XmlFiles;
+            var files = folderValidation.DataFiles;
 
             if (files.Count == 0)
             {
-                LoadedFileText.Text = "Keine XML-Dateien gefunden";
+                LoadedFileText.Text = "Keine XML/CSV-Dateien gefunden";
                 if (showMessages)
                 {
-                    MessageBox.Show("Im gewählten Ordner wurden keine XML-Dateien gefunden.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Im gewählten Ordner wurden keine XML- oder CSV-Dateien gefunden.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
 
                 return;
@@ -141,7 +141,7 @@ public partial class MainWindow : Window
             {
                 try
                 {
-                    var fileReadings = ParseEbix(file);
+                    var fileReadings = ParseDataFile(file);
                     if (fileReadings.Count == 0)
                     {
                         failedFileCount++;
@@ -204,8 +204,10 @@ public partial class MainWindow : Window
     private static FolderValidationResult ValidateDataFolderStructure(string rootFolder)
     {
         var result = new FolderValidationResult();
-        result.XmlFiles = Directory
-            .EnumerateFiles(rootFolder, "*.xml", SearchOption.AllDirectories)
+        result.DataFiles = Directory
+            .EnumerateFiles(rootFolder, "*.*", SearchOption.AllDirectories)
+            .Where(x => string.Equals(Path.GetExtension(x), ".xml", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(Path.GetExtension(x), ".csv", StringComparison.OrdinalIgnoreCase))
             .OrderBy(x => x)
             .ToList();
 
@@ -220,10 +222,13 @@ public partial class MainWindow : Window
             return result;
         }
 
-        var rootXmlCount = Directory.EnumerateFiles(rootFolder, "*.xml", SearchOption.TopDirectoryOnly).Count();
-        if (rootXmlCount > 0)
+        var rootDataFileCount = Directory
+            .EnumerateFiles(rootFolder, "*.*", SearchOption.TopDirectoryOnly)
+            .Count(x => string.Equals(Path.GetExtension(x), ".xml", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(Path.GetExtension(x), ".csv", StringComparison.OrdinalIgnoreCase));
+        if (rootDataFileCount > 0)
         {
-            result.Warnings.Add($"Im Root-Ordner liegen {rootXmlCount} XML-Datei(en). Erwartet sind Tagesdateien in Monats-Unterordnern.");
+            result.Warnings.Add($"Im Root-Ordner liegen {rootDataFileCount} Daten-Datei(en). Erwartet sind Tagesdateien in Monats-Unterordnern.");
         }
 
         foreach (var monthFolder in monthFolders)
@@ -236,13 +241,15 @@ public partial class MainWindow : Window
             }
 
             var dayFiles = Directory
-                .EnumerateFiles(monthFolder, "*.xml", SearchOption.TopDirectoryOnly)
+                .EnumerateFiles(monthFolder, "*.*", SearchOption.TopDirectoryOnly)
+                .Where(x => string.Equals(Path.GetExtension(x), ".xml", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(Path.GetExtension(x), ".csv", StringComparison.OrdinalIgnoreCase))
                 .OrderBy(x => x)
                 .ToList();
 
             if (dayFiles.Count == 0)
             {
-                result.Warnings.Add($"Im Monatsordner '{monthFolderName}' wurden keine Tages-XML-Dateien gefunden.");
+                result.Warnings.Add($"Im Monatsordner '{monthFolderName}' wurden keine Tagesdateien (XML/CSV) gefunden.");
                 continue;
             }
 
@@ -252,7 +259,7 @@ public partial class MainWindow : Window
 
             if (!hasDateLikeNames)
             {
-                result.Warnings.Add($"Im Monatsordner '{monthFolderName}' wurde kein Tagesdateiname im Datumsformat erkannt (z. B. 20250116.xml oder 20250116_155120_ebIX.xml).");
+                result.Warnings.Add($"Im Monatsordner '{monthFolderName}' wurde kein Tagesdateiname im Datumsformat erkannt (z. B. 20250116.xml oder 20250116_155120_ebIX.csv).");
             }
         }
 
@@ -800,6 +807,7 @@ public partial class MainWindow : Window
 
         if (!File.Exists(_configPath))
         {
+            DataFolderTextBox.Text = GetDefaultDataFolderPath();
             _isLoadingConfig = false;
             return;
         }
@@ -827,12 +835,20 @@ public partial class MainWindow : Window
 
             _pvDistributionMode = NormalizeDistributionMode(config.PvDistributionMode);
 
-            DataFolderTextBox.Text = config.DataFolderPath;
+            DataFolderTextBox.Text = string.IsNullOrWhiteSpace(config.DataFolderPath)
+                ? GetDefaultDataFolderPath()
+                : config.DataFolderPath;
         }
         finally
         {
             _isLoadingConfig = false;
         }
+    }
+
+    private static string GetDefaultDataFolderPath()
+    {
+        var candidate = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "Test"));
+        return Directory.Exists(candidate) ? candidate : string.Empty;
     }
 
     private void SaveConfig()
@@ -1143,6 +1159,97 @@ public partial class MainWindow : Window
             .Replace(")", "\\)", StringComparison.Ordinal);
     }
 
+    private static List<MeterReading> ParseDataFile(string filePath)
+    {
+        return string.Equals(Path.GetExtension(filePath), ".csv", StringComparison.OrdinalIgnoreCase)
+            ? ParseCsv(filePath)
+            : ParseEbix(filePath);
+    }
+
+    private static List<MeterReading> ParseCsv(string filePath)
+    {
+        var lines = File.ReadAllLines(filePath);
+        if (lines.Length < 3)
+        {
+            return [];
+        }
+
+        var separator = lines[0].Contains(';') ? ';' : ',';
+        var rows = lines.Select(x => x.Split(separator)).ToList();
+
+        var meteringCodeRow = rows.FirstOrDefault(x => x.Length > 1
+            && string.Equals(x[0].Trim(), "Metering-Code", StringComparison.OrdinalIgnoreCase));
+        if (meteringCodeRow is null)
+        {
+            return [];
+        }
+
+        var meterColumns = new List<(int ColumnIndex, string MeterId)>();
+        for (var index = 1; index < meteringCodeRow.Length; index++)
+        {
+            var meterId = meteringCodeRow[index].Trim();
+            if (string.IsNullOrWhiteSpace(meterId))
+            {
+                continue;
+            }
+
+            var meterLabel = rows[0].Length > index ? rows[0][index].Trim() : string.Empty;
+            if (IsAggregateVzevMeter(meterId, meterLabel))
+            {
+                continue;
+            }
+
+            meterColumns.Add((index, meterId));
+        }
+
+        if (meterColumns.Count == 0)
+        {
+            return [];
+        }
+
+        var result = new List<MeterReading>();
+        var deCh = CultureInfo.GetCultureInfo("de-CH");
+
+        foreach (var row in rows)
+        {
+            if (row.Length == 0)
+            {
+                continue;
+            }
+
+            var firstColumn = row[0].Trim();
+            if (!DateTime.TryParse(firstColumn, deCh, DateTimeStyles.AssumeLocal, out var timestamp)
+                && !DateTime.TryParse(firstColumn, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out timestamp))
+            {
+                continue;
+            }
+
+            timestamp = NormalizeToQuarterHour(timestamp);
+
+            foreach (var meterColumn in meterColumns)
+            {
+                if (meterColumn.ColumnIndex >= row.Length)
+                {
+                    continue;
+                }
+
+                var valueText = row[meterColumn.ColumnIndex].Trim();
+                var value = ParseDecimalFlexible(valueText);
+                if (!value.HasValue || value.Value <= 0m)
+                {
+                    continue;
+                }
+
+                result.Add(new MeterReading(meterColumn.MeterId, timestamp, value.Value));
+            }
+        }
+
+        return result
+            .GroupBy(x => new { x.MeterId, x.PeriodStart })
+            .Select(g => new MeterReading(g.Key.MeterId, g.Key.PeriodStart, g.Sum(x => x.Kwh)))
+            .ToList();
+    }
+
     private static List<MeterReading> ParseEbix(string filePath)
     {
         var document = XDocument.Load(filePath, LoadOptions.PreserveWhitespace);
@@ -1174,7 +1281,7 @@ public partial class MainWindow : Window
                 ?? period.Ancestors().Select(ExtractDateTime).FirstOrDefault(x => x.HasValue)
                 ?? fallbackDate;
 
-            result.Add(new MeterReading(meterId, date, values.Sum()));
+            result.Add(new MeterReading(meterId, NormalizeToQuarterHour(date), values.Sum()));
         }
 
         if (result.Count == 0)
@@ -1199,7 +1306,7 @@ public partial class MainWindow : Window
             if (meterIds.Count > 0 && numericValues.Count > 0)
             {
                 var kwh = numericValues.Sum();
-                var date = fallbackDate;
+                var date = NormalizeToQuarterHour(fallbackDate);
 
                 foreach (var meterId in meterIds)
                 {
@@ -1249,11 +1356,28 @@ public partial class MainWindow : Window
                 var timestamp = explicitObservationTime
                     ?? (sequence.HasValue ? blockTime.AddMinutes((sequence.Value - 1) * 15) : blockTime);
 
-                readings.Add(new MeterReading(meterId, timestamp, quantity.Value));
+                readings.Add(new MeterReading(meterId, NormalizeToQuarterHour(timestamp), quantity.Value));
             }
         }
 
         return readings;
+    }
+
+    private static bool IsAggregateVzevMeter(string meterId, string meterLabel)
+    {
+        if (meterLabel.Contains("vZEV Summe", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return meterId.EndsWith("965", StringComparison.OrdinalIgnoreCase)
+            || meterId.EndsWith("966", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static DateTime NormalizeToQuarterHour(DateTime value)
+    {
+        var roundedMinute = (value.Minute / 15) * 15;
+        return new DateTime(value.Year, value.Month, value.Day, value.Hour, roundedMinute, 0, value.Kind);
     }
 
     private static DateOnly? TryExtractDateFromFilePath(string filePath)
@@ -1504,7 +1628,7 @@ public partial class MainWindow : Window
     {
         public List<string> Warnings { get; } = [];
 
-        public List<string> XmlFiles { get; set; } = [];
+        public List<string> DataFiles { get; set; } = [];
     }
 
     public sealed class PropertyMapping
