@@ -44,6 +44,8 @@
                             <DataGridTextColumn Header="Netzbezug (kWh)" Binding="{Binding GridKwh, StringFormat=N3}" Width="*" />
                             <DataGridTextColumn Header="PV-Strom (kWh)" Binding="{Binding PvKwh, StringFormat=N3}" Width="*" />
                             <DataGridTextColumn Header="Einspeisung (kWh)" Binding="{Binding FeedInKwh, StringFormat=N3}" Width="*" />
+                            <DataGridTextColumn Header="ZEV Bezug (kWh)" Binding="{Binding ZevImportKwh, StringFormat=N3}" Width="*" />
+                            <DataGridTextColumn Header="ZEV Rücklieferung (kWh)" Binding="{Binding ZevExportKwh, StringFormat=N3}" Width="*" />
                             <DataGridTextColumn Header="Netzkosten (CHF)" Binding="{Binding GridCost, StringFormat=N2}" Width="*" />
                             <DataGridTextColumn Header="PV-Kosten (CHF)" Binding="{Binding PvCost, StringFormat=N2}" Width="*" />
                             <DataGridTextColumn Header="Ersparnis Nachbar-PV (CHF)" Binding="{Binding SavedByNeighborPv, StringFormat=N2}" Width="*" />
@@ -63,6 +65,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
@@ -120,7 +123,14 @@
                         <ComboBox Name="PvDistributionModeComboBox" Width="220" SelectionChanged="PvDistributionModeComboBox_OnSelectionChanged" />
                     </StackPanel>
 
-                    <GroupBox Grid.Row="7" Header="Monatliche Preise (CHF/kWh)">
+                    <StackPanel Grid.Row="7" Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock VerticalAlignment="Center" Text="ZEV Bezug-Zähler:" Margin="0,0,8,0" />
+                        <ComboBox Name="ZevImportMeterComboBox" Width="320" Margin="0,0,20,0" SelectionChanged="ZevMeterComboBox_OnSelectionChanged" />
+                        <TextBlock VerticalAlignment="Center" Text="ZEV Rücklieferung-Zähler:" Margin="0,0,8,0" />
+                        <ComboBox Name="ZevExportMeterComboBox" Width="320" SelectionChanged="ZevMeterComboBox_OnSelectionChanged" />
+                    </StackPanel>
+
+                    <GroupBox Grid.Row="8" Header="Monatliche Preise (CHF/kWh)">
                         <DataGrid Name="MonthlyPricesDataGrid" AutoGenerateColumns="False" CanUserAddRows="True" RowEditEnding="MonthlyPricesDataGrid_OnRowEditEnding">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Monat (yyyy-MM)" Binding="{Binding MonthKey}" Width="2*" />

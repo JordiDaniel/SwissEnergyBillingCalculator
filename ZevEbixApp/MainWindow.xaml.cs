@@ -1,6 +1,8 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -17,6 +19,7 @@ namespace ZevEbixApp;
 public partial class MainWindow : Window
 {
     private const string NoPvMeterOption = "<kein PV-Zähler>";
+    private const string NoZevMeterOption = "<kein ZEV-Zähler>";
     private const string PvDistributionModeFair = "FairShare";
     private const string PvDistributionModePriority = "Priority";
 
@@ -26,6 +29,7 @@ public partial class MainWindow : Window
     private readonly List<MeterReading> _meterReadings = [];
     private readonly ObservableCollection<string> _availableGridMeters = [];
     private readonly ObservableCollection<string> _availablePvMeters = [];
+    private readonly ObservableCollection<string> _availableZevMeters = [];
     private readonly ObservableCollection<DistributionModeOption> _distributionModes =
     [
         new DistributionModeOption(PvDistributionModeFair, "Gleichmässig verteilen"),
@@ -36,6 +40,8 @@ public partial class MainWindow : Window
     private bool _isLoadingConfig;
     private bool _isAutoSaving;
     private string _pvDistributionMode = PvDistributionModeFair;
+    private string _zevImportMeterId = string.Empty;
+    private string _zevExportMeterId = string.Empty;
 
     public MainWindow()
     {
@@ -47,8 +53,13 @@ public partial class MainWindow : Window
 
         GridMeterComboBox.ItemsSource = _availableGridMeters;
         PvMeterComboBox.ItemsSource = _availablePvMeters;
+        ZevImportMeterComboBox.ItemsSource = _availableZevMeters;
+        ZevExportMeterComboBox.ItemsSource = _availableZevMeters;
         _availablePvMeters.Add(NoPvMeterOption);
+        _availableZevMeters.Add(NoZevMeterOption);
         PvMeterComboBox.SelectedIndex = 0;
+        ZevImportMeterComboBox.SelectedIndex = 0;
+        ZevExportMeterComboBox.SelectedIndex = 0;
 
         PvDistributionModeComboBox.ItemsSource = _distributionModes;
         PvDistributionModeComboBox.DisplayMemberPath = nameof(DistributionModeOption.Label);
@@ -85,7 +96,7 @@ public partial class MainWindow : Window
         var folderPath = DataFolderTextBox.Text.Trim();
         if (string.IsNullOrWhiteSpace(folderPath))
         {
-            MessageBox.Show("Bitte zuerst auf der Konfig-Seite einen gültigen EBIX-Datenordner hinterlegen.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Bitte zuerst auf der Konfig-Seite einen gültigen EBIX-Datenordner oder Dropbox-Link hinterlegen.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -94,20 +105,15 @@ public partial class MainWindow : Window
 
     private void LoadFolderData(string folderPath, bool showMessages)
     {
-        if (!Directory.Exists(folderPath))
+        var localFolderPath = ResolveDataSourceFolder(folderPath, showMessages);
+        if (string.IsNullOrWhiteSpace(localFolderPath))
         {
-            LoadedFileText.Text = "Kein Ordner geladen";
-            if (showMessages)
-            {
-                MessageBox.Show("Der konfigurierte Ordner wurde nicht gefunden.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-
             return;
         }
 
         try
         {
-            var folderValidation = ValidateDataFolderStructure(folderPath);
+            var folderValidation = ValidateDataFolderStructure(localFolderPath);
             var files = folderValidation.DataFiles;
 
             if (files.Count == 0)
@@ -135,9 +141,14 @@ public partial class MainWindow : Window
 
             var parsedFileCount = 0;
             var failedFileCount = 0;
-            var parsedReadings = new List<MeterReading>();
+            var uniqueReadings = new Dictionary<(string MeterId, DateTime PeriodStart), MeterReading>();
 
-            foreach (var file in files)
+            var orderedFiles = files
+                .OrderBy(x => File.GetLastWriteTimeUtc(x))
+                .ThenBy(x => x, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            foreach (var file in orderedFiles)
             {
                 try
                 {
@@ -148,7 +159,11 @@ public partial class MainWindow : Window
                         continue;
                     }
 
-                    parsedReadings.AddRange(fileReadings);
+                    foreach (var reading in fileReadings)
+                    {
+                        uniqueReadings[(reading.MeterId, reading.PeriodStart)] = reading;
+                    }
+
                     parsedFileCount++;
                 }
                 catch
@@ -158,7 +173,7 @@ public partial class MainWindow : Window
             }
 
             _meterReadings.Clear();
-            _meterReadings.AddRange(parsedReadings);
+            _meterReadings.AddRange(uniqueReadings.Values.OrderBy(x => x.PeriodStart).ThenBy(x => x.MeterId, StringComparer.OrdinalIgnoreCase));
 
             LoadedFileText.Text = $"Geladen: {parsedFileCount}/{files.Count} Dateien, {_meterReadings.Count} Werte";
 
@@ -188,6 +203,171 @@ public partial class MainWindow : Window
                 MessageBox.Show($"Fehler beim Laden des EBIX-Ordners: {ex.Message}", "Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+    }
+
+    private string? ResolveDataSourceFolder(string folderOrUrl, bool showMessages)
+    {
+        var source = folderOrUrl.Trim();
+        if (TryGetHttpUri(source, out var cloudUri))
+        {
+            try
+            {
+                var localCloudFolder = DownloadCloudDataToTempFolder(cloudUri);
+                LoadedFileText.Text = $"Cloud-Daten geladen: {cloudUri.Host}";
+                return localCloudFolder;
+            }
+            catch (Exception ex)
+            {
+                LoadedFileText.Text = "Cloud-Download fehlgeschlagen";
+                if (showMessages)
+                {
+                    MessageBox.Show($"Cloud-Daten konnten nicht geladen werden: {ex.Message}", "Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+
+                return null;
+            }
+        }
+
+        if (Directory.Exists(source))
+        {
+            return source;
+        }
+
+        LoadedFileText.Text = "Kein Ordner geladen";
+        if (showMessages)
+        {
+            MessageBox.Show("Der konfigurierte Ordner wurde nicht gefunden.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        return null;
+    }
+
+    private static bool TryGetHttpUri(string value, out Uri uri)
+    {
+        if (Uri.TryCreate(value, UriKind.Absolute, out uri)
+            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+        {
+            return true;
+        }
+
+        uri = null!;
+        return false;
+    }
+
+    private static string DownloadCloudDataToTempFolder(Uri cloudUri)
+    {
+        using var client = new HttpClient();
+        using var response = client.GetAsync(ToDropboxDownloadUri(cloudUri)).GetAwaiter().GetResult();
+        response.EnsureSuccessStatusCode();
+
+        var contentType = response.Content.Headers.ContentType?.MediaType;
+        if (string.Equals(contentType, "text/html", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Der Link liefert eine Webseite statt Daten. Bitte einen direkten Dropbox-Download-Link verwenden.");
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "ZevEbixApp", "CloudData", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+
+        var fileName = response.Content.Headers.ContentDisposition?.FileNameStar
+            ?? response.Content.Headers.ContentDisposition?.FileName
+            ?? Path.GetFileName(cloudUri.LocalPath);
+
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            fileName = "cloud-data.zip";
+        }
+
+        fileName = fileName.Trim('"');
+        if (fileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+        {
+            fileName = "cloud-data.zip";
+        }
+
+        var downloadedFilePath = Path.Combine(tempRoot, fileName);
+        var bytes = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
+        File.WriteAllBytes(downloadedFilePath, bytes);
+
+        var extension = Path.GetExtension(downloadedFilePath);
+        if (string.Equals(extension, ".zip", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(contentType, "application/zip", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(contentType, "application/x-zip-compressed", StringComparison.OrdinalIgnoreCase))
+        {
+            var extractFolder = Path.Combine(tempRoot, "extracted");
+            Directory.CreateDirectory(extractFolder);
+            var extractedFiles = ExtractZipSafely(downloadedFilePath, extractFolder);
+            if (extractedFiles == 0)
+            {
+                throw new InvalidOperationException("Die ZIP-Datei enthält keine gültigen CSV/XML-Datendateien.");
+            }
+
+            return extractFolder;
+        }
+
+        if (string.Equals(extension, ".csv", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(extension, ".xml", StringComparison.OrdinalIgnoreCase))
+        {
+            return tempRoot;
+        }
+
+        throw new InvalidOperationException("Der Cloud-Link muss eine ZIP-, CSV- oder XML-Datei liefern.");
+    }
+
+    private static int ExtractZipSafely(string zipPath, string destinationFolder)
+    {
+        var extractedFileCount = 0;
+        var destinationRoot = Path.GetFullPath(destinationFolder);
+        if (!destinationRoot.EndsWith(Path.DirectorySeparatorChar))
+        {
+            destinationRoot += Path.DirectorySeparatorChar;
+        }
+
+        using var archive = ZipFile.OpenRead(zipPath);
+        foreach (var entry in archive.Entries)
+        {
+            if (string.IsNullOrWhiteSpace(entry.Name))
+            {
+                continue;
+            }
+
+            var targetPath = Path.GetFullPath(Path.Combine(destinationRoot, entry.FullName));
+            if (!targetPath.StartsWith(destinationRoot, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+            entry.ExtractToFile(targetPath, overwrite: true);
+
+            var ext = Path.GetExtension(targetPath);
+            if (string.Equals(ext, ".csv", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(ext, ".xml", StringComparison.OrdinalIgnoreCase))
+            {
+                extractedFileCount++;
+            }
+        }
+
+        return extractedFileCount;
+    }
+
+    private static Uri ToDropboxDownloadUri(Uri uri)
+    {
+        if (!uri.Host.Contains("dropbox.com", StringComparison.OrdinalIgnoreCase))
+        {
+            return uri;
+        }
+
+        var url = uri.ToString();
+        if (Regex.IsMatch(url, @"([?&])dl=\d", RegexOptions.IgnoreCase))
+        {
+            url = Regex.Replace(url, @"([?&])dl=\d", "$1dl=1", RegexOptions.IgnoreCase);
+        }
+        else
+        {
+            url = url.Contains('?') ? $"{url}&dl=1" : $"{url}?dl=1";
+        }
+
+        return new Uri(url);
     }
 
     private void TryAutoLoadConfiguredFolderOnStartup()
@@ -365,6 +545,14 @@ public partial class MainWindow : Window
         RefreshSummary();
     }
 
+    private void ZevMeterComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        _zevImportMeterId = NormalizeZevMeter(ZevImportMeterComboBox.SelectedItem as string);
+        _zevExportMeterId = NormalizeZevMeter(ZevExportMeterComboBox.SelectedItem as string);
+        AutoSaveConfiguration(commitEdits: false);
+        RefreshSummary();
+    }
+
     private void MonthFilterComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         RefreshSummary();
@@ -435,10 +623,20 @@ public partial class MainWindow : Window
             _availablePvMeters.Add(meter);
         }
 
+        _availableZevMeters.Clear();
+        _availableZevMeters.Add(NoZevMeterOption);
+        foreach (var meter in meters)
+        {
+            _availableZevMeters.Add(meter);
+        }
+
         if (PvMeterComboBox.SelectedItem is null)
         {
             PvMeterComboBox.SelectedIndex = 0;
         }
+
+        ZevImportMeterComboBox.SelectedItem = _availableZevMeters.Contains(_zevImportMeterId) ? _zevImportMeterId : NoZevMeterOption;
+        ZevExportMeterComboBox.SelectedItem = _availableZevMeters.Contains(_zevExportMeterId) ? _zevExportMeterId : NoZevMeterOption;
     }
 
     private void RefreshMonthFilter()
@@ -502,6 +700,8 @@ public partial class MainWindow : Window
             var states = mappings.ToDictionary(x => x, _ => new AllocationState());
             var demandByProperty = mappings.ToDictionary(x => x, x => GetMeterKwhByPeriod(x.GridMeterId, month));
             var supplyByProducer = mappings.ToDictionary(x => x, x => GetMeterKwhByPeriod(x.PvMeterId, month));
+            var zevImportKwh = GetMeterKwhByPeriod(_zevImportMeterId, month).Values.Sum();
+            var zevExportKwh = GetMeterKwhByPeriod(_zevExportMeterId, month).Values.Sum();
 
             foreach (var mapping in mappings)
             {
@@ -573,6 +773,8 @@ public partial class MainWindow : Window
                     GridKwh = gridKwh,
                     PvKwh = state.PvKwh,
                     FeedInKwh = state.FeedInKwh,
+                    ZevImportKwh = zevImportKwh,
+                    ZevExportKwh = zevExportKwh,
                     GridCost = gridCost,
                     PvCost = pvCost,
                     PvRevenue = pvRevenue,
@@ -722,6 +924,16 @@ public partial class MainWindow : Window
         return selectedValue;
     }
 
+    private static string NormalizeZevMeter(string? selectedValue)
+    {
+        if (string.IsNullOrWhiteSpace(selectedValue) || selectedValue == NoZevMeterOption)
+        {
+            return string.Empty;
+        }
+
+        return selectedValue;
+    }
+
     private MonthlyPrice GetPriceForMonth(string month)
     {
         return _monthlyPrices.FirstOrDefault(x => x.MonthKey == month) ?? new MonthlyPrice();
@@ -834,6 +1046,8 @@ public partial class MainWindow : Window
             }
 
             _pvDistributionMode = NormalizeDistributionMode(config.PvDistributionMode);
+            _zevImportMeterId = NormalizeZevMeter(config.ZevImportMeterId);
+            _zevExportMeterId = NormalizeZevMeter(config.ZevExportMeterId);
 
             DataFolderTextBox.Text = string.IsNullOrWhiteSpace(config.DataFolderPath)
                 ? GetDefaultDataFolderPath()
@@ -858,7 +1072,9 @@ public partial class MainWindow : Window
             PropertyMappings = _propertyMappings.ToList(),
             MonthlyPrices = _monthlyPrices.Where(x => !string.IsNullOrWhiteSpace(x.MonthKey)).ToList(),
             DataFolderPath = DataFolderTextBox.Text.Trim(),
-            PvDistributionMode = NormalizeDistributionMode(_pvDistributionMode)
+            PvDistributionMode = NormalizeDistributionMode(_pvDistributionMode),
+            ZevImportMeterId = NormalizeZevMeter(_zevImportMeterId),
+            ZevExportMeterId = NormalizeZevMeter(_zevExportMeterId)
         };
 
         var json = JsonSerializer.Serialize(config, new JsonSerializerOptions
@@ -986,6 +1202,8 @@ public partial class MainWindow : Window
             "Netzbezug (kWh)",
             "PV-Strom (kWh)",
             "Einspeisung (kWh)",
+            "ZEV Bezug (kWh)",
+            "ZEV Rücklieferung (kWh)",
             "Netzkosten (CHF)",
             "PV-Kosten (CHF)",
             "Ersparnis durch Nachbar-PV (CHF)",
@@ -1004,6 +1222,8 @@ public partial class MainWindow : Window
                 row.GridKwh.ToString("N3", culture),
                 row.PvKwh.ToString("N3", culture),
                 row.FeedInKwh.ToString("N3", culture),
+                row.ZevImportKwh.ToString("N3", culture),
+                row.ZevExportKwh.ToString("N3", culture),
                 row.GridCost.ToString("N2", culture),
                 row.PvCost.ToString("N2", culture),
                 row.SavedByNeighborPv.ToString("N2", culture),
@@ -1035,14 +1255,14 @@ public partial class MainWindow : Window
         {
             "ZEV Abrechnung (gefilterte Ansicht)",
             string.Empty,
-            "Monat | Liegenschaft | Total kWh | Netz kWh | PV kWh | Einspeisung kWh | Netz CHF | PV CHF | Ersparnis CHF | Mehrerlös CHF | PV Erlös CHF | Saldo CHF",
-            new string('-', 120)
+            "Monat | Liegenschaft | Total kWh | Netz kWh | PV kWh | Einspeisung kWh | ZEV Bezug kWh | ZEV Rücklieferung kWh | Netz CHF | PV CHF | Ersparnis CHF | Mehrerlös CHF | PV Erlös CHF | Saldo CHF",
+            new string('-', 160)
         };
 
         foreach (var row in rows)
         {
             tableLines.Add(
-                $"{row.MonthLabel} | {row.PropertyName} | {row.TotalKwh:N3} | {row.GridKwh:N3} | {row.PvKwh:N3} | {row.FeedInKwh:N3} | {row.GridCost:N2} | {row.PvCost:N2} | {row.SavedByNeighborPv:N2} | {row.AdditionalRevenueVsFeedIn:N2} | {row.PvRevenue:N2} | {row.TotalCost:N2}");
+                $"{row.MonthLabel} | {row.PropertyName} | {row.TotalKwh:N3} | {row.GridKwh:N3} | {row.PvKwh:N3} | {row.FeedInKwh:N3} | {row.ZevImportKwh:N3} | {row.ZevExportKwh:N3} | {row.GridCost:N2} | {row.PvCost:N2} | {row.SavedByNeighborPv:N2} | {row.AdditionalRevenueVsFeedIn:N2} | {row.PvRevenue:N2} | {row.TotalCost:N2}");
         }
 
         var pages = SplitIntoPages(tableLines, 46);
@@ -1189,12 +1409,6 @@ public partial class MainWindow : Window
         {
             var meterId = meteringCodeRow[index].Trim();
             if (string.IsNullOrWhiteSpace(meterId))
-            {
-                continue;
-            }
-
-            var meterLabel = rows[0].Length > index ? rows[0][index].Trim() : string.Empty;
-            if (IsAggregateVzevMeter(meterId, meterLabel))
             {
                 continue;
             }
@@ -1361,17 +1575,6 @@ public partial class MainWindow : Window
         }
 
         return readings;
-    }
-
-    private static bool IsAggregateVzevMeter(string meterId, string meterLabel)
-    {
-        if (meterLabel.Contains("vZEV Summe", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        return meterId.EndsWith("965", StringComparison.OrdinalIgnoreCase)
-            || meterId.EndsWith("966", StringComparison.OrdinalIgnoreCase);
     }
 
     private static DateTime NormalizeToQuarterHour(DateTime value)
@@ -1622,6 +1825,10 @@ public partial class MainWindow : Window
         public string DataFolderPath { get; init; } = string.Empty;
 
         public string PvDistributionMode { get; init; } = PvDistributionModeFair;
+
+        public string ZevImportMeterId { get; init; } = string.Empty;
+
+        public string ZevExportMeterId { get; init; } = string.Empty;
     }
 
     private sealed class FolderValidationResult
@@ -1693,6 +1900,10 @@ public partial class MainWindow : Window
         public decimal PvKwh { get; init; }
 
         public decimal FeedInKwh { get; init; }
+
+        public decimal ZevImportKwh { get; init; }
+
+        public decimal ZevExportKwh { get; init; }
 
         public decimal GridCost { get; init; }
 
