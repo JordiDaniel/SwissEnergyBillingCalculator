@@ -1,0 +1,3 @@
+name: Jordi ZEV Add-ons
+url: 'https://github.com/JordiDaniel/SwissEnergyBillingCalculator'
+maintainer: Jordi
