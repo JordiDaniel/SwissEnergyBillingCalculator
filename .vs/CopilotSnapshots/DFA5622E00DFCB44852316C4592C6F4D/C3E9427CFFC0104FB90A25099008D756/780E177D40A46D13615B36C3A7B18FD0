@@ -1,0 +1,106 @@
+﻿<Window x:Class="ZevEbixApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ZevEbixApp"
+        mc:Ignorable="d"
+        Title="ZEV Abrechnung" Height="720" Width="1100">
+    <Grid Margin="12">
+        <TabControl>
+            <TabItem Header="Abrechnung">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button Name="LoadEbixButton" Content="EBIX-Datei laden" Width="150" Margin="0,0,8,0" Click="LoadEbixButton_OnClick" />
+                        <TextBlock Name="LoadedFileText" VerticalAlignment="Center" Text="Keine Datei geladen" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,10,0,10">
+                        <TextBlock VerticalAlignment="Center" Text="Monat:" Margin="0,0,8,0" />
+                        <ComboBox Name="MonthFilterComboBox" Width="160" SelectionChanged="MonthFilterComboBox_OnSelectionChanged" />
+                        <Button Content="Aktualisieren" Width="120" Margin="12,0,0,0" Click="RefreshSummaryButton_OnClick" />
+                    </StackPanel>
+
+                    <DataGrid Name="SummaryDataGrid"
+                              Grid.Row="2"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              HeadersVisibility="Column"
+                              Margin="0,0,0,8">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Monat" Binding="{Binding MonthLabel}" Width="100" />
+                            <DataGridTextColumn Header="Liegenschaft" Binding="{Binding PropertyName}" Width="220" />
+                            <DataGridTextColumn Header="Verbrauch total (kWh)" Binding="{Binding TotalKwh, StringFormat=N3}" Width="*" />
+                            <DataGridTextColumn Header="Netzbezug (kWh)" Binding="{Binding GridKwh, StringFormat=N3}" Width="*" />
+                            <DataGridTextColumn Header="PV-Strom (kWh)" Binding="{Binding PvKwh, StringFormat=N3}" Width="*" />
+                            <DataGridTextColumn Header="Netzkosten (CHF)" Binding="{Binding GridCost, StringFormat=N2}" Width="*" />
+                            <DataGridTextColumn Header="PV-Kosten (CHF)" Binding="{Binding PvCost, StringFormat=N2}" Width="*" />
+                            <DataGridTextColumn Header="Gesamtkosten (CHF)" Binding="{Binding TotalCost, StringFormat=N2}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Konfiguration">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock FontWeight="Bold" Text="Liegenschaft und Zähler-Zuordnung" />
+                    <Grid Grid.Row="1" Margin="0,8,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Name="PropertyNameTextBox" Grid.Column="0" Margin="0,0,8,0" />
+                        <ComboBox Name="GridMeterComboBox" Grid.Column="1" Margin="0,0,8,0" />
+                        <ComboBox Name="PvMeterComboBox" Grid.Column="2" Margin="0,0,8,0" />
+                        <Button Grid.Column="3" Content="Hinzufügen" Padding="12,4" Click="AddPropertyMappingButton_OnClick" />
+                    </Grid>
+
+                    <DataGrid Name="PropertyMappingsDataGrid"
+                              Grid.Row="2"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              Margin="0,0,0,10">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Liegenschaft" Binding="{Binding PropertyName}" Width="2*" />
+                            <DataGridTextColumn Header="Netz-Zähler" Binding="{Binding GridMeterId}" Width="2*" />
+                            <DataGridTextColumn Header="PV-Zähler" Binding="{Binding PvMeterId}" Width="2*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Content="Ausgewählte Liegenschaft löschen" Width="220" Click="RemovePropertyMappingButton_OnClick" />
+                        <Button Content="Konfiguration speichern" Width="180" Margin="10,0,0,0" Click="SaveConfigButton_OnClick" />
+                    </StackPanel>
+
+                    <GroupBox Grid.Row="4" Header="Monatliche Preise (CHF/kWh)">
+                        <DataGrid Name="MonthlyPricesDataGrid" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Monat (yyyy-MM)" Binding="{Binding MonthKey}" Width="2*" />
+                                <DataGridTextColumn Header="Netzpreis" Binding="{Binding GridPricePerKwh}" Width="*" />
+                                <DataGridTextColumn Header="PV-Preis" Binding="{Binding PvPricePerKwh}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>

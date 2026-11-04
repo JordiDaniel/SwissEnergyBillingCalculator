@@ -1,0 +1,271 @@
+﻿## PROCESSES
+Currently debugging:
+- ZevEbixApp.exe (PID: 14824)
+
+## CALLSTACK
+Thread ID: 16192
+[1] ZevEbixApp.dll!ZevEbixApp.MainWindow.RefreshSummary
+This is the current user focused stack frame. The provided locals context corresponds to this stack frame, but you may evaluate expressions and retrieve code for any frame.
+Code for the stack frame:
+```csharp ZevEbixApp\MainWindow.xaml.cs
+512:     private void RefreshSummary()
+513:     {
+514:         _summaryRows.Clear();
+515: 
+516:         if (_propertyMappings.Count == 0 || _meterReadings.Count == 0)
+517:         {
+518:             return;
+519:         }
+520: 
+521:         var selectedMonth = GetSelectedMonth();
+522:         var allMonths = _meterReadings
+523:             .Select(x => ToMonthKey(x.PeriodStart))
+524:             .Distinct()
+525:             .OrderBy(x => x)
+526:             .ToList();
+527: 
+528:         var monthsToEvaluate = selectedMonth is null ? allMonths : [selectedMonth];
+529: 
+530:         var mappings = _propertyMappings
+531:             .OrderBy(x => x.PvPriority <= 0 ? int.MaxValue : x.PvPriority)
+532:             .ThenBy(x => x.PropertyName, StringComparer.OrdinalIgnoreCase)
+533:             .ToList();
+534: 
+535:         foreach (var month in monthsToEvaluate)
+536:         {
+537:             var price = GetPriceForMonth(month);
+538:             var states = mappings.ToDictionary(x => x, _ => new AllocationState());
+539:             var demandByProperty = mappings.ToDictionary(x => x, x => GetMeterKwhByPeriod(x.GridMeterId, month));
+540:             var supplyByProducer = mappings.ToDictionary(x => x, x => GetMeterKwhByPeriod(x.PvMeterId, month));
+541:             var zevImportKwh = GetMeterKwhByPeriod(_zevImportMeterId, month).Values.Sum();
+542:             var zevExportKwh = GetMeterKwhByPeriod(_zevExportMeterId, month).Values.Sum();
+543: 
+544:             foreach (var mapping in mappings)
+545:             {
+546:                 states[mapping].TotalKwh = demandByProperty[mapping].Values.Sum();
+547:             }
+548: 
+549:             var periods = demandByProperty.Values
+550:                 .SelectMany(x => x.Keys)
+551:                 .Concat(supplyByProducer.Values.SelectMany(x => x.Keys))
+552:                 .Distinct()
+553:                 .OrderBy(x => x)
+554:                 .ToList();
+555: 
+556:             foreach (var period in periods)
+557:             {
+558:                 var remainingDemand = new Dictionary<PropertyMapping, decimal>();
+559:                 foreach (var mapping in mappings)
+560:                 {
+561:                     if (demandByProperty[mapping].TryGetValue(period, out var demand) && demand > 0m)
+562:                     {
+563:                         remainingDemand[mapping] = demand;
+564:                     }
+565:                 }
+566: 
+567:                 foreach (var producer in mappings)
+568:                 {
+569:                     if (!supplyByProducer[producer].TryGetValue(period, out var availableSupply) || availableSupply <= 0m)
+570:                     {
+571:                         continue;
+572:                     }
+573: 
+574:                     var consumers = remainingDemand
+575:                         .Where(x => x.Key != producer && x.Value > 0m)
+576:                         .Select(x => x.Key)
+577:                         .ToList();
+578: 
+579:                     var distributedKwh = _pvDistributionMode == PvDistributionModePriority
+580:                         ? DistributeByPriority(availableSupply, producer, consumers, remainingDemand, states)
+581:                         : DistributeFairShare(availableSupply, producer, consumers, remainingDemand, states);
+582: 
+583:                     var feedInKwh = availableSupply - distributedKwh;
+584:                     if (feedInKwh > 0m)
+585:                     {
+586:                         states[producer].FeedInKwh += feedInKwh;
+587:                     }
+588:                 }
+589:             }
+590: 
+591:             foreach (var mapping in mappings)
+592:             {
+593:                 var state = states[mapping];
+594:                 if (state.TotalKwh <= 0m && state.InternalSoldKwh <= 0m && state.FeedInKwh <= 0m)
+595:                 {
+596:                     continue;
+597:                 }
+598: 
+599:                 var gridKwh = Math.Max(0m, state.TotalKwh - state.PvKwh);
+600:                 var gridCost = gridKwh * price.GridPricePerKwh;
+601:                 var pvCost = state.PvKwh * price.PvPricePerKwh;
+602:                 var pvRevenue = (state.InternalSoldKwh * price.PvPricePerKwh) + (state.FeedInKwh * price.FeedInTariffPerKwh);
+603:                 var savedByNeighborPv = state.PvKwh * Math.Max(0m, price.GridPricePerKwh - price.PvPricePerKwh);
+604:                 var additionalRevenueVsFeedIn = state.InternalSoldKwh * (price.PvPricePerKwh - price.FeedInTariffPerKwh);
+605: 
+606:                 _summaryRows.Add(new SummaryRow
+607:                 {
+608:                     MonthLabel = month,
+609:                     PropertyName = mapping.PropertyName,
+610:                     TotalKwh = state.TotalKwh,
+611:                     GridKwh = gridKwh,
+612:                     PvKwh = state.PvKwh,
+613:                     FeedInKwh = state.FeedInKwh,
+614:                     ZevImportKwh = zevImportKwh,
+615:                     ZevExportKwh = zevExportKwh,
+616:                     GridCost = gridCost,
+617:                     PvCost = pvCost,
+618:                     PvRevenue = pvRevenue,
+619:                     SavedByNeighborPv = savedByNeighborPv,
+620:                     AdditionalRevenueVsFeedIn = additionalRevenueVsFeedIn
+621:                 });
+622:             }
+623:         }
+624:     }
+```
+Current statement: line 541
+[2] ZevEbixApp.dll!ZevEbixApp.MainWindow.LoadFolderData
+Code for the stack frame:
+```csharp ZevEbixApp\MainWindow.xaml.cs
+104:     private void LoadFolderData(string folderPath, bool showMessages)
+105:     {
+106:         if (!Directory.Exists(folderPath))
+107:         {
+108:             LoadedFileText.Text = "Kein Ordner geladen";
+109:             if (showMessages)
+110:             {
+111:                 MessageBox.Show("Der konfigurierte Ordner wurde nicht gefunden.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
+112:             }
+113: 
+114:             return;
+115:         }
+116: 
+117:         try
+118:         {
+119:             var folderValidation = ValidateDataFolderStructure(folderPath);
+120:             var files = folderValidation.DataFiles;
+121: 
+122:             if (files.Count == 0)
+123:             {
+124:                 LoadedFileText.Text = "Keine XML/CSV-Dateien gefunden";
+125:                 if (showMessages)
+126:                 {
+127:                     MessageBox.Show("Im gewählten Ordner wurden keine XML- oder CSV-Dateien gefunden.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
+128:                 }
+129: 
+130:                 return;
+131:             }
+132: 
+133:             if (showMessages && folderValidation.Warnings.Count > 0)
+134:             {
+135:                 var shownWarnings = folderValidation.Warnings.Take(6).ToList();
+136:                 var message = string.Join(Environment.NewLine, shownWarnings.Select(x => $"- {x}"));
+137:                 if (folderValidation.Warnings.Count > shownWarnings.Count)
+138:                 {
+139:                     message += Environment.NewLine + $"- ... und {folderValidation.Warnings.Count - shownWarnings.Count} weitere Hinweise";
+140:                 }
+141: 
+142:                 MessageBox.Show($"Ordnerstruktur-Hinweise:{Environment.NewLine}{message}", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
+143:             }
+144: 
+145:             var parsedFileCount = 0;
+146:             var failedFileCount = 0;
+147:             var uniqueReadings = new Dictionary<(string MeterId, DateTime PeriodStart), MeterReading>();
+148: 
+149:             var orderedFiles = files
+150:                 .OrderBy(x => File.GetLastWriteTimeUtc(x))
+151:                 .ThenBy(x => x, StringComparer.OrdinalIgnoreCase)
+152:                 .ToList();
+153: 
+154:             foreach (var file in orderedFiles)
+155:             {
+156:                 try
+157:                 {
+158:                     var fileReadings = ParseDataFile(file);
+159:                     if (fileReadings.Count == 0)
+160:                     {
+161:                         failedFileCount++;
+162:                         continue;
+163:                     }
+164: 
+165:                     foreach (var reading in fileReadings)
+166:                     {
+167:                         uniqueReadings[(reading.MeterId, reading.PeriodStart)] = reading;
+168:                     }
+169: 
+170:                     parsedFileCount++;
+171:                 }
+172:                 catch
+173:                 {
+174:                     failedFileCount++;
+175:                 }
+176:             }
+177: 
+178:             _meterReadings.Clear();
+179:             _meterReadings.AddRange(uniqueReadings.Values.OrderBy(x => x.PeriodStart).ThenBy(x => x.MeterId, StringComparer.OrdinalIgnoreCase));
+180: 
+181:             LoadedFileText.Text = $"Geladen: {parsedFileCount}/{files.Count} Dateien, {_meterReadings.Count} Werte";
+182: 
+183:             if (_meterReadings.Count == 0)
+184:             {
+185:                 if (showMessages)
+186:                 {
+187:                     MessageBox.Show("Es konnten keine verwertbaren EBIX-Werte erkannt werden.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Warning);
+188:                 }
+189:             }
+190:             else if (showMessages && failedFileCount > 0)
+191:             {
+192:                 MessageBox.Show($"{failedFileCount} Datei(en) konnten nicht ausgewertet werden.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
+193:             }
+194: 
+195:             RefreshAvailableMeters();
+196:             EnsureMonthlyPricesForData();
+197:             AutoSaveConfiguration();
+198:             RefreshMonthFilter();
+199:             RefreshSummary();
+200:         }
+201:         catch (Exception ex)
+202:         {
+203:             LoadedFileText.Text = "Fehler beim Laden";
+204:             if (showMessages)
+205:             {
+206:                 MessageBox.Show($"Fehler beim Laden des EBIX-Ordners: {ex.Message}", "Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
+207:             }
+208:         }
+209:     }
+```
+Current statement: line 199
+[3] ZevEbixApp.dll!ZevEbixApp.MainWindow.LoadEbixButton_OnClick
+Code for the stack frame:
+```csharp ZevEbixApp\MainWindow.xaml.cs
+92:     private void LoadEbixButton_OnClick(object sender, RoutedEventArgs e)
+93:     {
+94:         var folderPath = DataFolderTextBox.Text.Trim();
+95:         if (string.IsNullOrWhiteSpace(folderPath))
+96:         {
+97:             MessageBox.Show("Bitte zuerst auf der Konfig-Seite einen gültigen EBIX-Datenordner hinterlegen.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
+98:             return;
+99:         }
+100: 
+101:         LoadFolderData(folderPath, showMessages: true);
+102:     }
+```
+Current statement: line 101
+[4] [External Code]
+
+## LOCALS
+| Name | Type | Value |
+| --- | --- | --- |
+| this | ZevEbixApp.MainWindow | {ZevEbixApp.MainWindow} |
+| selectedMonth | string | null |
+| allMonths | System.Collections.Generic.List<string> | Count = 2 |
+| monthsToEvaluate | System.Collections.Generic.List<string> | Count = 2 |
+| mappings | System.Collections.Generic.List<ZevEbixApp.MainWindow.PropertyMapping> | Count = 2 |
+| price | ZevEbixApp.MainWindow.MonthlyPrice | {ZevEbixApp.MainWindow.MonthlyPrice} |
+| states | System.Collections.Generic.Dictionary<ZevEbixApp.MainWindow.PropertyMapping, ZevEbixApp.MainWindow.AllocationState> | Count = 2 |
+| demandByProperty | System.Collections.Generic.Dictionary<ZevEbixApp.MainWindow.PropertyMapping, System.Collections.Generic.Dictionary<System.DateTime, decimal>> | Count = 2 |
+| supplyByProducer | System.Collections.Generic.Dictionary<ZevEbixApp.MainWindow.PropertyMapping, System.Collections.Generic.Dictionary<System.DateTime, decimal>> | Count = 2 |
+| zevImportKwh | decimal | 0 |
+| zevExportKwh | decimal | 0 |
+| periods | System.Collections.Generic.List<System.DateTime> | null |
+| month | string | "2026-10" |
+

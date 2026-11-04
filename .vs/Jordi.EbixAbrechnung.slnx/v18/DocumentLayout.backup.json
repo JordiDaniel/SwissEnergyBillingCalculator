@@ -1,0 +1,290 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\git\\Jordi.EbixAbrechnung\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{9638D36F-8B7D-3ECA-9F5D-F0F12FB5CEE4}|ZevEbixApp\\ZevEbixApp.csproj|d:\\git\\jordi.ebixabrechnung\\zevebixapp\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9638D36F-8B7D-3ECA-9F5D-F0F12FB5CEE4}|ZevEbixApp\\ZevEbixApp.csproj|solutionrelative:zevebixapp\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\10000457\\.copilot\\plans\\plan-zev-monatsbezug-rcklieferung-in-auswertung-und-konfigurierbare-zhler.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}|MarkdownSecurePreview"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\10000457\\.copilot\\plans\\plan-pv-berschuss-vergtung-und-verteilungslogik-erweitern.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}|MarkdownSecurePreview"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9638D36F-8B7D-3ECA-9F5D-F0F12FB5CEE4}|ZevEbixApp\\ZevEbixApp.csproj|d:\\git\\jordi.ebixabrechnung\\zevebixapp\\zevebixapp.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{9638D36F-8B7D-3ECA-9F5D-F0F12FB5CEE4}|ZevEbixApp\\ZevEbixApp.csproj|solutionrelative:zevebixapp\\zevebixapp.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9638D36F-8B7D-3ECA-9F5D-F0F12FB5CEE4}|ZevEbixApp\\ZevEbixApp.csproj|d:\\git\\jordi.ebixabrechnung\\zevebixapp\\assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9638D36F-8B7D-3ECA-9F5D-F0F12FB5CEE4}|ZevEbixApp\\ZevEbixApp.csproj|solutionrelative:zevebixapp\\assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6CE0F825-9530-7C20-723F-C7667D79503F}|ZevEbixWeb\\ZevEbixWeb.csproj|d:\\git\\jordi.ebixabrechnung\\zevebixweb\\models\\billingmodels.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6CE0F825-9530-7C20-723F-C7667D79503F}|ZevEbixWeb\\ZevEbixWeb.csproj|solutionrelative:zevebixweb\\models\\billingmodels.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6CE0F825-9530-7C20-723F-C7667D79503F}|ZevEbixWeb\\ZevEbixWeb.csproj|d:\\git\\jordi.ebixabrechnung\\zevebixweb\\models\\appconfig.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6CE0F825-9530-7C20-723F-C7667D79503F}|ZevEbixWeb\\ZevEbixWeb.csproj|solutionrelative:zevebixweb\\models\\appconfig.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6CE0F825-9530-7C20-723F-C7667D79503F}|ZevEbixWeb\\ZevEbixWeb.csproj|d:\\git\\jordi.ebixabrechnung\\zevebixweb\\services\\billingengine.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6CE0F825-9530-7C20-723F-C7667D79503F}|ZevEbixWeb\\ZevEbixWeb.csproj|solutionrelative:zevebixweb\\services\\billingengine.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6CE0F825-9530-7C20-723F-C7667D79503F}|ZevEbixWeb\\ZevEbixWeb.csproj|d:\\git\\jordi.ebixabrechnung\\zevebixweb\\services\\appstatestore.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6CE0F825-9530-7C20-723F-C7667D79503F}|ZevEbixWeb\\ZevEbixWeb.csproj|solutionrelative:zevebixweb\\services\\appstatestore.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6CE0F825-9530-7C20-723F-C7667D79503F}|ZevEbixWeb\\ZevEbixWeb.csproj|d:\\git\\jordi.ebixabrechnung\\zevebixweb\\pages\\index.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6CE0F825-9530-7C20-723F-C7667D79503F}|ZevEbixWeb\\ZevEbixWeb.csproj|solutionrelative:zevebixweb\\pages\\index.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6CE0F825-9530-7C20-723F-C7667D79503F}|ZevEbixWeb\\ZevEbixWeb.csproj|d:\\git\\jordi.ebixabrechnung\\zevebixweb\\pages\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{6CE0F825-9530-7C20-723F-C7667D79503F}|ZevEbixWeb\\ZevEbixWeb.csproj|solutionrelative:zevebixweb\\pages\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6CE0F825-9530-7C20-723F-C7667D79503F}|ZevEbixWeb\\ZevEbixWeb.csproj|d:\\git\\jordi.ebixabrechnung\\zevebixweb\\pages\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{6CE0F825-9530-7C20-723F-C7667D79503F}|ZevEbixWeb\\ZevEbixWeb.csproj|solutionrelative:zevebixweb\\pages\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6CE0F825-9530-7C20-723F-C7667D79503F}|ZevEbixWeb\\ZevEbixWeb.csproj|d:\\git\\jordi.ebixabrechnung\\zevebixweb\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6CE0F825-9530-7C20-723F-C7667D79503F}|ZevEbixWeb\\ZevEbixWeb.csproj|solutionrelative:zevebixweb\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\git\\Jordi.EbixAbrechnung\\docker-compose.yml||{06C066C6-04A2-4E5D-8202-439FD4234EF1}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:docker-compose.yml||{06C066C6-04A2-4E5D-8202-439FD4234EF1}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6CE0F825-9530-7C20-723F-C7667D79503F}|ZevEbixWeb\\ZevEbixWeb.csproj|d:\\git\\jordi.ebixabrechnung\\zevebixweb\\dockerfile||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{6CE0F825-9530-7C20-723F-C7667D79503F}|ZevEbixWeb\\ZevEbixWeb.csproj|solutionrelative:zevebixweb\\dockerfile||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\git\\Jordi.EbixAbrechnung\\.dockerignore||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:.dockerignore||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 679,
+          "SelectedChildIndex": 10,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{fb9be9ec-5f71-4a43-9ae6-ae02b00f044b}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": ".dockerignore",
+              "DocumentMoniker": "D:\\git\\Jordi.EbixAbrechnung\\.dockerignore",
+              "RelativeDocumentMoniker": ".dockerignore",
+              "ToolTip": "D:\\git\\Jordi.EbixAbrechnung\\.dockerignore",
+              "RelativeToolTip": ".dockerignore",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-11-04T13:17:09.479Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "Dockerfile",
+              "DocumentMoniker": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixWeb\\Dockerfile",
+              "RelativeDocumentMoniker": "ZevEbixWeb\\Dockerfile",
+              "ToolTip": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixWeb\\Dockerfile",
+              "RelativeToolTip": "ZevEbixWeb\\Dockerfile",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-11-04T13:17:02.818Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "docker-compose.yml",
+              "DocumentMoniker": "D:\\git\\Jordi.EbixAbrechnung\\docker-compose.yml",
+              "RelativeDocumentMoniker": "docker-compose.yml",
+              "ToolTip": "D:\\git\\Jordi.EbixAbrechnung\\docker-compose.yml",
+              "RelativeToolTip": "docker-compose.yml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003775|",
+              "WhenOpened": "2026-11-04T13:17:02.553Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "BillingEngine.cs",
+              "DocumentMoniker": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixWeb\\Services\\BillingEngine.cs",
+              "RelativeDocumentMoniker": "ZevEbixWeb\\Services\\BillingEngine.cs",
+              "ToolTip": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixWeb\\Services\\BillingEngine.cs",
+              "RelativeToolTip": "ZevEbixWeb\\Services\\BillingEngine.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAALACAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-04T13:14:34.973Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "AppConfig.cs",
+              "DocumentMoniker": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixWeb\\Models\\AppConfig.cs",
+              "RelativeDocumentMoniker": "ZevEbixWeb\\Models\\AppConfig.cs",
+              "ToolTip": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixWeb\\Models\\AppConfig.cs",
+              "RelativeToolTip": "ZevEbixWeb\\Models\\AppConfig.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-04T13:13:36.177Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "BillingModels.cs",
+              "DocumentMoniker": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixWeb\\Models\\BillingModels.cs",
+              "RelativeDocumentMoniker": "ZevEbixWeb\\Models\\BillingModels.cs",
+              "ToolTip": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixWeb\\Models\\BillingModels.cs",
+              "RelativeToolTip": "ZevEbixWeb\\Models\\BillingModels.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-04T13:13:29.975Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixWeb\\Program.cs",
+              "RelativeDocumentMoniker": "ZevEbixWeb\\Program.cs",
+              "ToolTip": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixWeb\\Program.cs",
+              "RelativeToolTip": "ZevEbixWeb\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAIBJwAIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-04T13:16:44.086Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "_Layout.cshtml",
+              "DocumentMoniker": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixWeb\\Pages\\Shared\\_Layout.cshtml",
+              "RelativeDocumentMoniker": "ZevEbixWeb\\Pages\\Shared\\_Layout.cshtml",
+              "ToolTip": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixWeb\\Pages\\Shared\\_Layout.cshtml",
+              "RelativeToolTip": "ZevEbixWeb\\Pages\\Shared\\_Layout.cshtml",
+              "ViewState": "AgIAAAEAAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-11-04T13:16:20.918Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MainWindow.xaml.cs",
+              "DocumentMoniker": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixApp\\MainWindow.xaml.cs",
+              "RelativeDocumentMoniker": "ZevEbixApp\\MainWindow.xaml.cs",
+              "ToolTip": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixApp\\MainWindow.xaml.cs",
+              "RelativeToolTip": "ZevEbixApp\\MainWindow.xaml.cs",
+              "ViewState": "AgIAAK8AAAAAAAAAAAAuwL8AAAAlAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-31T09:14:59.4Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "AppStateStore.cs",
+              "DocumentMoniker": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixWeb\\Services\\AppStateStore.cs",
+              "RelativeDocumentMoniker": "ZevEbixWeb\\Services\\AppStateStore.cs",
+              "ToolTip": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixWeb\\Services\\AppStateStore.cs",
+              "RelativeToolTip": "ZevEbixWeb\\Services\\AppStateStore.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAIcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-04T13:14:57.525Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "Index.cshtml.cs",
+              "DocumentMoniker": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixWeb\\Pages\\Index.cshtml.cs",
+              "RelativeDocumentMoniker": "ZevEbixWeb\\Pages\\Index.cshtml.cs",
+              "ToolTip": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixWeb\\Pages\\Index.cshtml.cs",
+              "RelativeToolTip": "ZevEbixWeb\\Pages\\Index.cshtml.cs",
+              "ViewState": "AgIAAAIAAAAAAAAAAIBJwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-04T13:15:39.586Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixWeb\\Pages\\Index.cshtml",
+              "RelativeDocumentMoniker": "ZevEbixWeb\\Pages\\Index.cshtml",
+              "ToolTip": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixWeb\\Pages\\Index.cshtml",
+              "RelativeToolTip": "ZevEbixWeb\\Pages\\Index.cshtml",
+              "ViewState": "AgIAABkAAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-11-04T13:16:06.203Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "AssemblyInfo.cs",
+              "DocumentMoniker": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixApp\\AssemblyInfo.cs",
+              "RelativeDocumentMoniker": "ZevEbixApp\\AssemblyInfo.cs",
+              "ToolTip": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixApp\\AssemblyInfo.cs",
+              "RelativeToolTip": "ZevEbixApp\\AssemblyInfo.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-31T11:40:39.109Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ZevEbixApp.csproj",
+              "DocumentMoniker": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixApp\\ZevEbixApp.csproj",
+              "RelativeDocumentMoniker": "ZevEbixApp\\ZevEbixApp.csproj",
+              "ToolTip": "D:\\git\\Jordi.EbixAbrechnung\\ZevEbixApp\\ZevEbixApp.csproj",
+              "RelativeToolTip": "ZevEbixApp\\ZevEbixApp.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-08-31T11:51:39.146Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "plan-pv-berschuss-vergtung-und-verteilungslogik-erweitern.md [Preview]",
+              "DocumentMoniker": "C:\\Users\\10000457\\.copilot\\plans\\plan-pv-berschuss-vergtung-und-verteilungslogik-erweitern.md",
+              "ToolTip": "C:\\Users\\10000457\\.copilot\\plans\\plan-pv-berschuss-vergtung-und-verteilungslogik-erweitern.md [Preview]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-08-31T09:18:44.586Z",
+              "EditorCaption": " [Preview]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "plan-zev-monatsbezug-rcklieferung-in-auswertung-und-konfigurierbare-zhler.md [Preview]",
+              "DocumentMoniker": "C:\\Users\\10000457\\.copilot\\plans\\plan-zev-monatsbezug-rcklieferung-in-auswertung-und-konfigurierbare-zhler.md",
+              "ToolTip": "C:\\Users\\10000457\\.copilot\\plans\\plan-zev-monatsbezug-rcklieferung-in-auswertung-und-konfigurierbare-zhler.md [Preview]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-11-03T14:20:53.53Z",
+              "EditorCaption": " [Preview]"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

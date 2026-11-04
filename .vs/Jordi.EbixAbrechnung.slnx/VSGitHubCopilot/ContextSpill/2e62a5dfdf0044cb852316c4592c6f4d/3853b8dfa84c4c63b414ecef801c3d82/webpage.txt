@@ -1,0 +1,569 @@
+﻿Extracted web page content in markdown format:
+[Start contents for https://www.ckw.ch/energie/strom-teilen/zev-faq]
+- Zur Hauptnavigation
+- Zum Hauptinhalt
+- Zur Suche
+
+[CKW Logo](https://www.ckw.ch/)
+
+- [Energie](https://www.ckw.ch/energie/strom)
+    - [Strom](https://www.ckw.ch/energie/strom)
+    - [Solar](https://www.ckw.ch/energie/photovoltaik)
+    - [ZEV, vZEV und LEG](https://www.ckw.ch/energie/strom-teilen)
+    - [Wärmeverbunde](https://www.ckw.ch/energie/ckw-waermeverbunde)
+    - [Netz und Infrastruktur](https://www.ckw.ch/energie/netz-und-infrastruktur)
+    - [Batteriespeicher](https://www.ckw.ch/energie/batteriespeicher)
+    - [Energiehandel](https://www.ckw.ch/energie/energiehandel)
+- [Gebäudetechnik](https://www.ckw.ch/)
+    - [Wärmepumpen](https://www.ckw.ch/gebaeudetechnik/waermepumpen)
+    - [Gebäudeautomation](https://www.ckw.ch/gebaeudetechnik/gebaeudeautomation)
+    - [E-Mobilität](https://www.ckw.ch/gebaeudetechnik/ladeinfrastruktur)
+    - [Alarm- und Sicherheitssysteme](https://www.ckw.ch/gebaeudetechnik/alarm-sicherheit)
+    - [Elektroinstallationen](https://www.ckw.ch/gebaeudetechnik/elektroinstallationen)
+- [ICT-Lösungen](https://www.ckw.ch/ict-loesungen/modern-workplace)
+    - [Modern Workplace](https://www.ckw.ch/ict-loesungen/modern-workplace)
+    - [IT-Security](https://www.ckw.ch/ict-loesungen/it-security)
+    - [Datacenter Services](https://www.ckw.ch/ict-loesungen/datacenter-services)
+    - [Connectivity Services](https://www.ckw.ch/ict-loesungen/connectivity-services)
+
+- [Offene Stellen](https://www.ckw.ch/jobs)
+- [Support und Kontakt](https://www.ckw.ch/kontakt)
+- [Über CKW](https://www.ckw.ch/ueber-ckw)
+
+Suchen
+
+[MyCKW](https://my.ckw.ch/)
+
+...
+
+1. Energie
+1. [ZEV, vZEV und LEG](https://www.ckw.ch/energie/strom-teilen)
+
+# FAQ ZEV und vZEV
+
+
+
+### CKW-Infoanlass zum virtuellen ZEV vom 23. Juni 2025
+
+PDF3 MB
+
+### Präsentation CKW-Infoanlass zum virtuellen ZEV vom 23. Juni 2025
+
+## Allgemeines zu ZEV, vZEV und LEG
+
+### Wo finde ich weitere Informationen?
+
+Besuchen Sie für weitere Informationen die Webseiten [www.lokalerstrom.ch](https://www.lokalerstrom.ch/) 
+und [www.leghub.ch.](https://www.leghub.ch/)
+
+### Was ist ein Zusammenschluss zum Eigenverbrauch (ZEV) und wie unterscheidet er sich vom virtuellen Zusammenschluss zum Eigenverbrauch (vZEV)?
+
+Ein ZEV ist eine vertragliche Gemeinschaft, in der mehrere Parteien ihren selbst
+erzeugten Solarstrom gemeinsam nutzen. Dazu braucht es einen physischen
+Netzanschluss und eine eigene Leitungsinfrastruktur zwischen den Liegenschaften
+innerhalb des ZEV. 
+
+In einem virtuellen ZEV (vZEV) schliessen sich Liegenschaften zusammen, die über
+einen gemeinsamen Anschlusspunkt zum Verteilnetz verfügen. Für die
+Stromverteilung innerhalb des vZEV können die bestehenden Stromleitungen
+verwendet werden. Es braucht also keine neuen Stromleitungen oder andere
+baulichen Massnahmen, um einen vZEV zu bilden. Mitglieder eines vZEV benötigen
+zudem keine eigene Messinfrastruktur, sondern können gegen eine Gebühr
+(Messtarif) jene des Verteilnetzbetreibers verwenden. 
+
+Der vZEV ermöglicht eine einfachere Integration von bestehenden Gebäuden, da
+kein Austausch der Stromzähler oder Umbau der Netzanschlüsse erforderlich ist.
+Dies fördert eine breitere Nutzung erneuerbarer Energien. 
+
+### Wie kann ich einen ZEV/vZEV gründen und anmelden? 
+
+Um ein ZEV oder vZEV zu gründen, müssen alle Parteien informiert, ein Vertrag
+ausgearbeitet und eine Lösung für die Messung und Abrechnung gewählt werden. Die
+Anmeldung läuft über Ihren Verteilnetzbetreiber. Wenn sich Ihr Gebäude im
+Versorgungsgebiet von CKW befindet, dann können Sie [hier](https://www.ckw.ch/_Resources/Persistent/a/e/e/d/aeed3d909f980ade8a36cddc1a7834491a7b995d/20201106_Anmeldung_ZEV.pdf) 
+Ihren ZEV oder [hier](https://www.ckw.ch/energie/strom-teilen/vzev/anmeldung-vzev) 
+Ihren vZEV anmelden. 
+
+### Wo kann ich abklären, mit welchen Liegenschaften ich einen virtuellen ZEV (vzEV) gründen kann? 
+
+Nutzen Sie den [vZEV-Check](https://www.leghub.ch/funktionen/vzev-check) auf
+www.leghub.ch. Wählen Sie CKW als Ihren Stromversorger aus und prüfen Sie anhand
+Ihrer Adresse, welche Nachbarn für einen vZEV in Frage kommen. 
+
+### Wann können lokale Elektrizitätsgemeinschaften (LEG) gegründet werden?
+
+Lokale Elektrizitätsgemeinschaften können ab 1. Januar 2026 gegründet werden.
+CKW nutzt für den gesamten Gründungs-, Anmeldungs- und Verwaltungsprozess die
+Plattform LEGHub ([www.leghub.ch](http://www.leghub.ch/)).
+
+## Lokale Elektrizitätsgemeinschaften (LEG)
+
+### Auf welchen Netzebenen kann eine LEG gegründet werden?
+
+LEG sind auf die Netzebenen 5 und 7 beschränkt. Alle Teilnehmenden müssen auf
+derselben Netzebene angeschlossen sein. Eine LEG zwischen Teilnehmenden auf
+Netzebene 5 UND 7 ist nicht möglich. 
+
+### Welche Rabattierung gibt es bei der Netznutzung? 
+
+- 40 Prozent Rabatt, wenn für die Stromübertragung eine Netzebene genutzt wird 
+- 20 Prozent Rabatt, wenn für die Stromübertragung mehrere Netzebenen genutzt
+werden (NE7➡️NE5➡️NE7) 
+
+### Warum gibt es 20 oder 40 Prozent Rabatt auf die Netznutzung?
+
+In einer LEG bleibt ein großer Teil des Stroms «im Quartier». Das übergeordnete
+Netz wird weniger beansprucht. Diese Entlastung des Netzes wird pauschal
+honoriert. Je nach Ausgestaltung der LEG und netzdienlichem Verhalten erhalten
+Teilnehmende einen Rabatt von 20 oder 40 Prozent auf die Netznutzung. Der Rabatt
+betrifft ausschließlich den Netztarif. Der Preis für die Energie selbst wird
+separat vereinbart und ist nicht pauschal rabattiert.
+
+### Welche Kosten entstehen durch die Gründung einer oder die Teilnahme an einer LEG?
+
+Es fallen keine Kosten an. 
+
+### Bietet CKW eine Abrechnungsdienstleistung für LEG an? 
+
+Nein, aktuell bietet CKW keine Abrechnungslösungen an. 
+
+### Können Marktkunden an einer LEG teilnehmen? 
+
+Ja, Marktkunden können an einer LEG teilnehmen. Es wird jedoch empfohlen, dies
+vorab mit dem jeweiligen Energielieferanten zu klären. 
+
+### Bleibt der LEG-Teilnehmende Kunde von CKW? 
+
+Ja, der LEG-Teilnehmende bleibt Kunde von CKW und erhält weiterhin eine Rechnung
+von CKW. 
+
+### Können Batteriespeicher in eine LEG integriert werden?
+
+Ja, eine Integration ist möglich. Die Batterie darf jedoch nur über die
+PV-Anlage hinter dem Netzanschluss geladen werden, nicht mit Strom vom Netz. 
+
+### Kann eine LEG-Kundin den dynamischen Netztarif ab 1. Januar 2026 nutzen? 
+
+Ja, das ist möglich.
+
+### Kann ich mit meinem ZEV oder meinem vZEV an einer LEG teilnehmen? 
+
+Ja, Sie können mit Ihrem ZEV oder Ihrem vZEV an einer LEG teilnehmen. 
+
+## Teilnahme von Produktionsanlagen an einem vZEV
+
+### Darf eine HEIV-Anlage an einem vZEV teilnehmen? 
+
+Nein, eine HEIV-Anlage kann nicht an einem vZEV teilnehmen. 
+
+### Kann ich mit meiner KEV-geförderten Anlage einen vZEV gründen?
+
+KEV-Produktionsanlagen ohne Eigenverbrauch dürfen nicht an einem vZEV
+teilnehmen. KEV-Produktionsanlagen mit Eigenverbrauch können an einem vZEV
+teilnehmen.
+
+### Kann eine KEV-geförderte Anlage mit Eigenverbrauch nur mit dem Bezug am vZEV teilnehmen?
+
+Nein, da Bezug und Überschuss über denselben physischen Zähler laufen.
+
+## Abrechnung und Messung im vZEV
+
+### Wer übernimmt die Abrechnung und das Inkasso der Teilnehmenden eines vZEV?
+
+CKW stellt einem vZEV die für die Abrechnung notwendigen Lastgangdaten der
+Messung der Produktion und des Verbrauchs der einzelnen Teilnehmenden
+unentgeltlich bereit. Die Abrechnung erfolgt durch den vZEV-Betreiber oder einen
+beauftragten Dienstleister.
+
+### Kann die Abrechnung innerhalb eines vZEV eigenständig durchgeführt werden?
+
+Ja, standardmässig erfolgt die Abrechnung durch den vZEV-Betreiber. Optional
+kann ein Abrechnungsdienstleister beauftragt werden.
+
+### Welche Datenquellen stehen für die eigenständige Abrechnung zur Verfügung?
+
+Per E-Mail oder über einen FTPS-Server im [CSV](https://www.ckw.ch/_Resources/Persistent/8/a/4/9/8a49caad4b0cb3fa3773b04d1d11f66b58d02060/vZEV_Mustermatte_39_Musterort_Einzelmesswerte_taeglich_unplausibel_19.06.2025_24.06.2025.csv)
+- oder [ebIX](https://www.ckw.ch/_Resources/Persistent/d/2/e/2/d2e2b0416a20a4bc7f1d9457a6c83004e5e16983/20250116_155120_ebIX.xml)
+-Format. 
+
+### Wie hoch sind die Kosten für den CKW Smart Meter?
+
+Ab 2026 muss der Messtarif separat pro Messpunkt in Rechnung gestellt werden.
+
+Die monatliche Gebühr für den Messstellenbetrieb (Messtarif) beträgt bei einem
+klassischen Haushaltsanschluss mit Direktmessung 5.15 Franken pro Monat, exkl.
+MwSt. Das entspricht 61.80 Franken pro Jahr.
+
+[www.ckw.ch/netzprodukte](https://www.ckw.ch/energie/netz-und-infrastruktur/netzprodukte)
+
+### Welche Messgebühren sind für die Nutzung der CKW-Zähler ab 2026 zu erwarten?
+
+Die Netzbetreiber haben auf der Grundlage ihrer anrechenbaren Messkosten
+verursachergerechte Messtarife festzulegen und diese zu veröffentlichen. Das
+Messentgelt fällt pro Messpunkt an und ist in der Rechnungsstellung gesondert
+vom Netznutzungsentgelt auszuweisen. Für verschiedene Arten von Messpunkten
+können unterschiedlich hohe Kosten und Aufwände beim Netzbetreiber anfallen. Das
+erhobene Messentgelt muss verursachergerecht ausgestaltet sein und darf die
+anrechenbaren Messkosten nicht übersteigen. Die Messentgelte werden spätestens
+am 31. August 2025 von ElCom publiziert und sind dann unter [
+ckw.ch/stromprodukte](https://www.ckw.ch/energie/strom/stromprodukte) 
+einsehbar.
+
+### Wie wird der Netz-Grundtarif verrechnet?
+
+Der Netz-Grundtarif wird nur einmal pro vZEV erhoben. Der Messtarif wird ab 1.
+Januar 2026 für jeden von der Netzbetreiberin betriebenen Smart Meter
+(Messpunkt) innerhalb des vZEV verrechnet.
+
+### Wie wird der Netz-Leistungstarif verrechnet?
+
+Der Netz-Leistungstarif wird auf den gesamten vZEV-Bezug erhoben. Denn gleich
+wie bei einer ZEV gilt der gesamte vZEV als ein einziger Endverbraucher.
+
+### Meine vZEV wird zwei Produktionsanlagen beinhalten, eine mit einer Leistung von 29,9 kWp und eine mit 50 kWp. Wie hoch wird die Vergütung ausfallen?
+
+Je nach Leistung und Eigenverbrauch gelten folgende Vergütungssätze (Stand: 2025):
+
+- PV-Anlagen mit weniger als 30 kW: 6,0 Rp./kWh
+- PV-Anlagen mit Eigenverbrauch und mit einer Leistungen zwischen 30 und 150 kW:
+die Vergütung liegt zwischen 5,8 und 1,2 Rp./kWh – abhängig von der Leistung.
+Der Richtwert: 180 geteilt durch die Leistung der Anlage in kW. Die genauen
+Informationen finden Sie auf der [Website des Bundesamts für Energie](https://eur02.safelinks.protection.outlook.com/?url=https%3A%2F%2Fenergeiaplus.com%2F2025%2F02%2F24%2Fabnahmeverguetung-und-minimaltarife-fuer-photovoltaik-anlagen-was-hat-der-bunderat-fuer-2026-beschlossen%2F&data=05%7C02%7Cwebsite%40ckw.ch%7C5c11b001fd4f466657a008dd83273401%7C4abcb15f9fd74a13ac163d55a64fa21e%7C0%7C0%7C638810926591266789%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=YVSd1%2F%2FgTeOD7wRBqW6NzmQM1tjP9bdxZSxklmsR0Dg%3D&reserved=0)
+.
+- PV-Anlagen ohne Eigenverbrauch zwischen 30 und weniger als 150 kW: 6,2 Rp./kWh
+
+Für alle übrigen Anlagen (z.B. mit mehr als 150 kW) richtet sich die Vergütung
+nach dem Referenzmarktpreis des BFE.
+
+Hinweis: Bei der Höhe der Mindestvergütung orientiert sich CKW ab dem 1. Januar 2025
+an der aktuellen [Verordnung](https://eur02.safelinks.protection.outlook.com/?url=https%3A%2F%2Fwww.newsd.admin.ch%2Fnewsd%2Fmessage%2Fattachments%2F91800.pdf&data=05%7C02%7Cwebsite%40ckw.ch%7C5c11b001fd4f466657a008dd83273401%7C4abcb15f9fd74a13ac163d55a64fa21e%7C0%7C0%7C638810926591292967%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=ou8RQU9j96ATlaBjv2zRaVwd8XhE2py9wGjsFr%2BheWs%3D&reserved=0)
+, die der Bundesrat im Februar 2025 verabschiedet hat.
+
+### Welche Möglichkeiten haben vZEV-Teilnehmende, um ihren Stromverbrauch und ihre Stromkosten einzusehen?
+
+vZEV-Teilnehmende können individuelle Daten zu Stromverbrauch und -kosten nicht
+mehr über das Kundenportal MyCKW einsehen. Diese Informationen erhalten sie neu
+direkt vom Betreiber des vZEV. Sie haben Anspruch auf transparente Information
+durch den Betreiber, und ab 2026 können Sie sich auf ein verbessertes
+Datenzugangsrecht berufen.
+
+### Gibt es eine Möglichkeit, Stromproduktion und Stromverbrauch in einem vZEV in Echtzeit zu messen?
+
+Die Smart Meter von CKW verfügen über eine Kundenschnittstelle. Für diese
+Schnittstelle gibt es verschiedene Module (z. B. von [whatwatt](https://whatwatt.ch/de)
+), mit denen Produktions- und Verbrauchsdaten in Echtzeit abgerufen werden
+können. Die Module sind durch den vZEV-Betreiber zu beschaffen.
+
+### Abrechnungsbeispiel vZEV
+
+### Ausgangslage 
+
+Die Heizung ist über denselben virtuellen Zähler (vZEV) ans Netz angeschlossen 
+wie die Wohnungen und der Allgemeinstrom. Es gibt keine eigene CKW-Rechnung für
+die Heizung. Der Heizungszähler misst sowohl den Stromverbrauch als auch den
+Solarstrom (PV-Ertrag). Alles wird zusammen auf einer CKW-Rechnung für den
+vZEV-Betreiber abgerechnet.
+
+### Annahmen
+
+| Position | Wert (kWh) | 
+| --- | --- | 
+| V-Ertrag (gemessen beim Heizungszähler) | 2’000 | 
+| Gesamtverbrauch vZEV (alle Parteien inkl. Heizung) | 3’400 | 
+| → daraus: Netzbezug über virtuellen Zähler (CKW) | 1’400 | 
+
+### Verbrauchsaufteilung
+
+| Partei | Verbrauch (kWh) | 
+| --- | --- | 
+| Wohnung 1 | 800 | 
+| Wohnung 2 | 900 | 
+| Wohnung 3 | 700 | 
+| Allgemein | 600 | 
+| Heizung | 400 | 
+| Total | 3'400 | 
+
+### Verteilung des PV-Stroms (2'000 kWh anteilig) 
+
+| Verbraucher | Verbrauch (kWh) | Anteil (%) | Anteil PV-Strom (kWh) | Netzbezug (kWh) | 
+| --- | --- | --- | --- | --- | 
+| Whg 1 | 800 | 23.5 | 470 | 330 | 
+| Whg 2 | 900 | 26.5 | 530 | 370 | 
+| Whg 3 | 700 | 20.6 | 410 | 290 | 
+| Allgemein | 600 | 17.6 | 350 | 250 | 
+| Heizung | 400 | 11.8 | 240 | 160 | 
+| Total | 3'400 | 100 | 2’000 | 1’400 | 
+
+### CKW-Abrechnung an vZEV-Betreiber
+
+| Position | Menge | Einheit | Preisansatz | Betrag (CHF) | 
+| --- | --- | --- | --- | --- | 
+| Netzbezug (virtueller ZEV-Zähler) | 1'400 kWh | kWh | 0.35 CHF/kWh | 490.00 | 
+| Messtarif (pro Zähler) | 5 Monate | pauschal | 5.00 CHF | 25.00 | 
+| Total CKW-Rechnung | | | | 515.00 | 
+
+### Interne Verrechnung (Beispielansatz)
+
+Annahmen: 
+
+- PV-Strom intern verrechnet mit 0.15 CHF/kWh 
+- Netzstrom (weiterverrechnet) 0.35 CHF/kWh 
+
+| Partei | PV-Strom (kWh) | PV-Kosten (CHF) | Netzbezug (kWh) | Netz-Kosten (CHF) | Total (CHF) | 
+| --- | --- | --- | --- | --- | --- | 
+| Whg 1 | 470 | 70.50 | 330 | 115.50 | 186.00 | 
+| Whg 2 | 530 | 79.50 | 370 | 129.50 | 209.00 | 
+| Whg 3 | 410 | 61.50 | 290 | 101.50 | 163.00 | 
+| Allgemein | 350 | 52.50 | 250 | 87.50 | 140.00 | 
+| Heizung | 240 | 36.00 | 260 | 56.00 | 92.00 | 
+| Total | 2'000 | 300.00 | 1'400 | 490.00 | 790.00 | 
+
+Zusammenfassung – korrekte vZEV-Abrechnung 
+
+- Der produzierte Solarstrom (PV) wird intern je nach Verbrauch verteilt.
+- Die CKW-Rechnung zeigt nur einen virtuellen Messpunkt: den
+Gesamtstromverbrauch abzüglich des PV-Stroms.
+- Der Betreiber rechnet intern ab – basierend auf den Lastgangdaten, die CKW
+liefert.
+
+## Vertragsgestaltung und wirtschaftliche Aspekte
+
+### Wie lange ist die Kündigungsfrist eines vZEV?
+
+Die Kündigungsfrist des vZEV-Vertreters gegenüber CKW als Verteilnetzbetreiberin
+beträgt drei Monate.
+
+### Können einzelne Parteien einem bestehenden vZEV beitreten oder diesen verlassen?
+
+Ja, mit denselben Fristen wie bei der Neugründung. Der vZEV-Betreiber muss
+Mutationen innerhalb eines Monats an CKW melden. CKW hat die betreffenden
+Mieterinnen und Mieter sowie Pächterinnen und Pächter nach Beendigung derer
+Teilnahme am vZEV innert drei Monaten in die Grundversorgung aufzunehmen.
+
+### Wie erfolgt die Abrechnung des vZEV?
+
+Quartalsweise an den vZEV-Betreiber. Die Weiterverrechnung innerhalb des vZEV
+ist Sache des vZEV-Betreibers oder eines Abrechnungsdienstleisters. 
+
+### Wie hoch sind die Gebühren für einen vZEV?
+
+Ab 2026 muss der Messtarif separat pro Messpunkt in Rechnung gestellt werden.
+
+Die monatliche Gebühr für den Messstellenbetrieb (Messtarif) beträgt bei einem
+klassischen Haushaltsanschluss mit Direktmessung 5.15 Franken pro Monat, exkl.
+MwSt. Das entspricht 61.80 Franken pro Jahr.
+
+[www.ckw.ch/netzprodukte](https://www.ckw.ch/energie/netz-und-infrastruktur/netzprodukte)
+
+Informationen zur Höhe der Kosten für die Abrechnungsdienstleistung erhalten Sie
+bei den jeweiligen Abrechnungsdienstleistern.
+
+### Können Marktkunden (d.h. Kundinnen und Kunden mit einem bestehenden Energieliefervertrag im freien Markt) einem vZEV beitreten?
+
+Ja, Marktkunden können einem vZEV beitreten. Der bestehende Energieliefervertrag
+muss beendet oder angepasst werden, weil sich das Bezugsverhalten und die
+Energiemenge verändern.
+
+## Technische Fragen 
+
+### Kann ein separat gemessener Speicher an einem vZEV teilnehmen?
+
+Ja, unter der Voraussetzung, dass der Speicher bei CKW angemeldet wurde und die
+Zustimmung für die Nutzung der Smart-Meter-Daten vorliegt. Ferner sind die
+Vorgaben der StromVV zu beachten.
+
+### Kann man einen ZEV und einen vZEV kombinieren?
+
+Ein ZEV mit nur einem Hauptzähler (physische Austauschmessung) kann an einem
+virtuellen ZEV teilnehmen.
+
+### Kann man unterschiedliche Strompreise für einen ZEV und einen vZEV festlegen?
+
+Ja, die interne Verrechnung der Produktions- und Beschaffungskosten obliegt dem
+jeweiligen Betreiber.
+
+### Was bedeutet die Regelung zur Mindest-PV-Leistung von 10 Prozent der bezugsberechtigen Leistung (BBL)? 
+
+Beispiel: Eine PV-Anlage mit 10 kWp kann Messpunkte mit bis zu 100 kW BBL
+integrieren.
+
+## Stromverteilung und Vergütung
+
+### Wie wird der Überschussstrom innerhalb eines vZEV verteilt?
+
+Die Verteilung obliegt dem vZEV-Betreiber. Es können Prioritäten festgelegt
+werden.
+
+### Wie wird der eingespeiste Strom an den Produzenten vergütet? 
+
+CKW vergütet nur den vZEV-Betreiber, da der gesamte vZEV gegenüber CKW einen
+einzigen Endverbraucher bildet. Die interne Weiterverrechnung ist dessen
+Aufgabe. 
+
+### Wer bestimmt den kWh-Preis innerhalb des vZEV?
+
+Für die interne Verrechnung und Preisbildung ist dies der vZEV-Betreiber.
+
+### Gibt es vorgefertigte Vertragsbeispiele?
+
+Nein, CKW stellt keine Vorlagen bereit.
+
+### Muss ich den Strombezügern innerhalb meines vZEV eine gewisse Strommenge garantieren?
+
+Sie müssen keine Strommenge garantieren. Die Verteilung der produzierten Energie
+innerhalb des vZEV erfolgt nach dem gewählten Modell, z. B. prozentual,
+verbrauchsabhängig oder priorisiert. Wichtig ist, dass dieses Modell gegenüber
+den Teilnehmenden offengelegt und einheitlich angewendet wird.
+
+## Gesetzliche Vergünstigungen und Netznutzung
+
+### Fallen für den internen Stromverbrauch Netznutzungskosten und Abgaben an?
+
+Nein, der interne Eigenverbrauch ist von der Netznutzung und von Abgaben
+befreit. 
+
+### Fallen durch die Gründung eines vZEV Kosten seitens CKW an?
+
+Nein, es entstehen keine Einrichtungskosten durch die Netzbetreiberin CKW. 
+
+### Welche Daten liefert CKW für die Abrechnung? 
+
+15-Minuten-Lastgänge aller Teilnehmenden zur internen Abrechnung.
+
+## Wärmepumpen im vZEV
+
+### Kann meine Wärmepumpe, die aktuell während 6 Stunden gesperrt ist und im Tarif S abgerechnet wird, in einen vZEV integriert werden?
+
+Damit Ihre Wärmepumpe Teil eines vZEV sein kann, ist ein Tarifwechsel
+erforderlich. Nach dem Wechsel wird die Wärmepumpe nicht mehr zeitlich durch CKW
+gesteuert, sondern ist rund um die Uhr (24 h) freigeschaltet. Sie wird lediglich
+mit einer Notansteuerung versehen.Bitte beachten Sie: Je nach Situation vor Ort
+ist eine Anpassung der Steuerung durch Ihre Elektroinstallationsfirma notwendig.
+
+### Welche Kosten entstehen für meine Wärmepumpe im vZEV?
+
+Wärmepumpen, die im sperrbaren Tarif (z. B. Tarif S) betrieben werden,
+profitieren aktuell von einem reduzierten Leistungspreis von CHF 0.50 pro kW.
+Nach einer Integration in den vZEV entfällt dieser Vorteil. Die Wärmepumpe wird
+dann zum regulären vZEV-Leistungstarif abgerechnet.
+
+Vergleichen Sie die aktuellen Konditionen bitte sorgfältig:
+
+- [Preisinformation Stromprodukte 2025 - Sperrbare Stromprodukte](https://www.ckw.ch/_Resources/Persistent/9/a/f/3/9af3435d01f954fd0f66c634f44d7052dd9cf142/Preisinformation%20Stromprodukte%202025_Privat-und%20Gewerbekunden_sperrbaren%20Stromprodukt_neu.pdf)
+- [Stromprodukte](https://www.ckw.ch/energie/strom/stromprodukte)
+
+Ob sich die Einbindung Ihrer Wärmepumpe in einen vZEV lohnt, hängt vom
+individuellen Verbrauchsverhalten und der Tarifstruktur im vZEV ab.
+
+### Ich habe einen separaten Zähler für die Wärmepumpe, welche mit dem sperrbaren Stromprodukt abgerechnet wird. Kann dieser Zähler im vZEV beibehalten werden?
+
+Ja. Der separate Zähler kann grundsätzlich beibehalten werden.Bitte beachten Sie
+jedoch: Da die Wärmepumpe im vZEV nicht mehr zeitlich gesteuert wird, sondern
+dauerhaft freigeschaltet ist, muss die bestehende Steuerverdrahtung angepasst
+werden. Diese Anpassung ist durch Ihre Elektroinstallationsfirma vorzunehmen.
+Die Notansteuerung bleibt weiterhin bestehen.
+
+## Sonstiges
+
+### Kann CKW alle Messpunkte am Hausanschluss zur Verfügung stellen?
+
+Nein, der vZEV-Betreiber muss die relevanten Netzanschlüsse melden.
+
+### Wie wird der Strombezug der Nachbarn ermittelt? 
+
+CKW liefert die Daten, die Abrechnung erfolgt durch den vZEV-Betreiber.
+
+### Müssen alle vZEV-Teilnehmenden den Überschussstrom gleichmässig erhalten? 
+
+Nein, die Verteilung ist frei wählbar. 
+
+### Kann ein ZEV/vZEV rückwirkend angemeldet werden? 
+
+Nein, ein ZEV/vZEV kann nur auf den ersten Tag eines Monats in Betrieb genommen
+werden.
+
+## Kundensupport
+
+- [Kontakt](https://www.ckw.ch/kontakt)
+- [Umzug](https://www.ckw.ch/kontakt/umzug)
+- [Störungen](https://www.ckw.ch/kontakt/stoerungen)
+- [Rechnung und Zahlen](https://www.ckw.ch/kontakt/rechnungen-und-zahlungen)
+- [Online-Portale](https://www.ckw.ch/kontakt/online-portale)
+
+## Unternehmen
+
+- [Über CKW](https://www.ckw.ch/ueber-ckw)
+- [Karriere](https://www.ckw.ch/ueber-ckw/karriere)
+- [Standorte](https://www.ckw.ch/ueber-ckw/standorte)
+- [Medienstelle](https://www.ckw.ch/ueber-ckw/medienstelle)
+- [CKW-Storys](https://www.ckw.ch/ueber-ckw/ckw-storys)
+
+## Entdecken
+
+- [Energiewelt](https://www.ckw.ch/ueber-ckw/ckw-energiewelt)
+- [Schulservice](https://www.ckw.ch/ueber-ckw/ckw-energiewelt/schulservice)
+
+## Auszeichnungen
+
+- 
+
+- 
+
+- 
+
+## Bleiben Sie mit unserem Newsletter auf dem Laufenden.
+
+## Footer Navigation
+
+- [AGB](https://www.ckw.ch/agb)
+- [Datenschutz](https://www.ckw.ch/datenschutz)
+- [Impressum](https://www.ckw.ch/impressum)
+- [Nutzungsbedingungen](https://www.ckw.ch/nutzungsbedingungen)
+- [Gesetzliche Vorgaben](https://www.ckw.ch/gesetzliche-vorgaben)
+- [Kontakt](https://www.ckw.ch/kontakt)
+- Cookie Einstellungen
+
+- [Folgen Sie uns auf Facebook ](https://www.facebook.com/ckw.energiezukunft/)
+- [Folgen Sie uns auf Instagram ](https://www.instagram.com/ckwag/)
+- [Folgen Sie uns auf Youtube ](https://www.youtube.com/channel/UCIBl4Z7HF2ZZm5nBhPU9rxg)
+- [Folgen Sie uns auf Linkedin ](https://ch.linkedin.com/company/ckw)
+
+### Kontakt
+
+Anliegen
+
+Bitte wählenAbrechnung und StromtarifeUmzugFragen zu SolaranlagenOfferten für
+SolaranlagenEnergiewelt-FührungAllgemeine Fragen
+
+Hier finden Sie Antworten zu den häufigsten Fragen.
+
+[Rechnungen und Zahlungen](https://www.ckw.ch/kontakt/rechnungen-und-zahlungen)
+
+## Rechnung und Tarife
+
+Möchten Sie Ihren Umzug melden?
+
+[Umzug melden](https://www.ckw.ch/kontakt/umzug)
+
+## Umzug
+
+Hier finden Sie alle Informationen rund um Solaranlagen
+
+[Strom vom eigenen Dach](https://www.ckw.ch/energie/photovoltaik)
+
+## Solar
+
+Sie möchten eine Solaranlage installieren?
+
+Solaranlage installieren
+
+## Solaranlage-Offerte
+
+Sie interessieren sich für eine Führung bei uns im Haus?
+
+[Führung buchen](https://www.ckw.ch/ueber-ckw/ckw-energiewelt/fuehrung-buchen/energiewelt-booking)
+
+## Allgemeine Fragen
+
+
+[End contents for https://www.ckw.ch/energie/strom-teilen/zev-faq]

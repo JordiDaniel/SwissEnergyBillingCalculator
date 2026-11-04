@@ -1,0 +1,468 @@
+﻿using System.Collections.ObjectModel;
+using System.Globalization;
+using System.IO;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Windows;
+using System.Windows.Controls;
+using System.Xml.Linq;
+using Microsoft.Win32;
+
+namespace ZevEbixApp;
+
+/// <summary>
+/// Interaction logic for MainWindow.xaml
+/// </summary>
+public partial class MainWindow : Window
+{
+    private readonly ObservableCollection<PropertyMapping> _propertyMappings = [];
+    private readonly ObservableCollection<MonthlyPrice> _monthlyPrices = [];
+    private readonly ObservableCollection<SummaryRow> _summaryRows = [];
+    private readonly List<MeterReading> _meterReadings = [];
+    private readonly ObservableCollection<string> _availableMeters = [];
+
+    private readonly string _configPath = Path.Combine(AppContext.BaseDirectory, "zev-config.json");
+
+    public MainWindow()
+    {
+        InitializeComponent();
+
+        PropertyMappingsDataGrid.ItemsSource = _propertyMappings;
+        MonthlyPricesDataGrid.ItemsSource = _monthlyPrices;
+        SummaryDataGrid.ItemsSource = _summaryRows;
+
+        GridMeterComboBox.ItemsSource = _availableMeters;
+        PvMeterComboBox.ItemsSource = _availableMeters;
+
+        LoadConfig();
+        RefreshMonthFilter();
+        RefreshSummary();
+    }
+
+    private void LoadEbixButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Filter = "XML Files (*.xml)|*.xml|All files (*.*)|*.*",
+            Title = "EBIX-Datei auswählen"
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var parsedReadings = ParseEbix(dialog.FileName);
+            _meterReadings.Clear();
+            _meterReadings.AddRange(parsedReadings);
+
+            LoadedFileText.Text = $"Geladen: {Path.GetFileName(dialog.FileName)} ({_meterReadings.Count} Werte)";
+
+            RefreshAvailableMeters();
+            EnsureMonthlyPricesForData();
+            RefreshMonthFilter();
+            RefreshSummary();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Fehler beim Laden der EBIX-Datei: {ex.Message}", "Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void AddPropertyMappingButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        var name = PropertyNameTextBox.Text.Trim();
+        var gridMeter = GridMeterComboBox.SelectedItem as string;
+        var pvMeter = PvMeterComboBox.SelectedItem as string;
+
+        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(gridMeter) || string.IsNullOrWhiteSpace(pvMeter))
+        {
+            MessageBox.Show("Bitte Liegenschaftsname und beide Zähler auswählen.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        _propertyMappings.Add(new PropertyMapping
+        {
+            PropertyName = name,
+            GridMeterId = gridMeter,
+            PvMeterId = pvMeter
+        });
+
+        PropertyNameTextBox.Clear();
+        RefreshSummary();
+    }
+
+    private void RemovePropertyMappingButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (PropertyMappingsDataGrid.SelectedItem is not PropertyMapping selected)
+        {
+            return;
+        }
+
+        _propertyMappings.Remove(selected);
+        RefreshSummary();
+    }
+
+    private void SaveConfigButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        SaveConfig();
+        RefreshSummary();
+        MessageBox.Show("Konfiguration gespeichert.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void MonthFilterComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        RefreshSummary();
+    }
+
+    private void RefreshSummaryButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        RefreshSummary();
+    }
+
+    private void RefreshAvailableMeters()
+    {
+        var meters = _meterReadings.Select(x => x.MeterId).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToList();
+
+        _availableMeters.Clear();
+        foreach (var meter in meters)
+        {
+            _availableMeters.Add(meter);
+        }
+    }
+
+    private void RefreshMonthFilter()
+    {
+        var months = _meterReadings
+            .Select(x => x.Date.ToString("yyyy-MM", CultureInfo.InvariantCulture))
+            .Distinct()
+            .OrderBy(x => x)
+            .ToList();
+
+        MonthFilterComboBox.Items.Clear();
+        MonthFilterComboBox.Items.Add("Alle");
+
+        foreach (var month in months)
+        {
+            MonthFilterComboBox.Items.Add(month);
+        }
+
+        if (MonthFilterComboBox.SelectedItem is null)
+        {
+            MonthFilterComboBox.SelectedIndex = 0;
+        }
+    }
+
+    private string? GetSelectedMonth()
+    {
+        if (MonthFilterComboBox.SelectedItem is not string value || value == "Alle")
+        {
+            return null;
+        }
+
+        return value;
+    }
+
+    private void RefreshSummary()
+    {
+        _summaryRows.Clear();
+
+        if (_propertyMappings.Count == 0 || _meterReadings.Count == 0)
+        {
+            return;
+        }
+
+        var selectedMonth = GetSelectedMonth();
+        var allMonths = _meterReadings
+            .Select(x => x.Date.ToString("yyyy-MM", CultureInfo.InvariantCulture))
+            .Distinct()
+            .OrderBy(x => x)
+            .ToList();
+
+        var monthsToEvaluate = selectedMonth is null ? allMonths : [selectedMonth];
+
+        foreach (var mapping in _propertyMappings)
+        {
+            foreach (var month in monthsToEvaluate)
+            {
+                var gridKwh = SumMeterKwh(mapping.GridMeterId, month);
+                var pvKwh = SumMeterKwh(mapping.PvMeterId, month);
+                var totalKwh = gridKwh + pvKwh;
+
+                if (totalKwh <= 0)
+                {
+                    continue;
+                }
+
+                var price = GetPriceForMonth(month);
+                var gridCost = gridKwh * price.GridPricePerKwh;
+                var pvCost = pvKwh * price.PvPricePerKwh;
+
+                _summaryRows.Add(new SummaryRow
+                {
+                    MonthLabel = month,
+                    PropertyName = mapping.PropertyName,
+                    TotalKwh = totalKwh,
+                    GridKwh = gridKwh,
+                    PvKwh = pvKwh,
+                    GridCost = gridCost,
+                    PvCost = pvCost
+                });
+            }
+        }
+    }
+
+    private decimal SumMeterKwh(string meterId, string month)
+    {
+        return _meterReadings
+            .Where(x => string.Equals(x.MeterId, meterId, StringComparison.OrdinalIgnoreCase)
+                && x.Date.ToString("yyyy-MM", CultureInfo.InvariantCulture) == month)
+            .Sum(x => x.Kwh);
+    }
+
+    private MonthlyPrice GetPriceForMonth(string month)
+    {
+        return _monthlyPrices.FirstOrDefault(x => x.MonthKey == month) ?? new MonthlyPrice();
+    }
+
+    private void EnsureMonthlyPricesForData()
+    {
+        var months = _meterReadings
+            .Select(x => x.Date.ToString("yyyy-MM", CultureInfo.InvariantCulture))
+            .Distinct()
+            .OrderBy(x => x)
+            .ToList();
+
+        foreach (var month in months)
+        {
+            if (_monthlyPrices.Any(x => x.MonthKey == month))
+            {
+                continue;
+            }
+
+            _monthlyPrices.Add(new MonthlyPrice
+            {
+                MonthKey = month,
+                GridPricePerKwh = 0m,
+                PvPricePerKwh = 0m
+            });
+        }
+    }
+
+    private void LoadConfig()
+    {
+        if (!File.Exists(_configPath))
+        {
+            return;
+        }
+
+        var content = File.ReadAllText(_configPath);
+        var config = JsonSerializer.Deserialize<AppConfig>(content);
+        if (config is null)
+        {
+            return;
+        }
+
+        _propertyMappings.Clear();
+        foreach (var mapping in config.PropertyMappings)
+        {
+            _propertyMappings.Add(mapping);
+        }
+
+        _monthlyPrices.Clear();
+        foreach (var price in config.MonthlyPrices)
+        {
+            _monthlyPrices.Add(price);
+        }
+    }
+
+    private void SaveConfig()
+    {
+        var config = new AppConfig
+        {
+            PropertyMappings = _propertyMappings.ToList(),
+            MonthlyPrices = _monthlyPrices.Where(x => !string.IsNullOrWhiteSpace(x.MonthKey)).ToList()
+        };
+
+        var json = JsonSerializer.Serialize(config, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+
+        File.WriteAllText(_configPath, json);
+    }
+
+    private static List<MeterReading> ParseEbix(string filePath)
+    {
+        var document = XDocument.Load(filePath);
+        var result = new List<MeterReading>();
+
+        var timeSeriesElements = document
+            .Descendants()
+            .Where(x => x.Name.LocalName.Contains("TimeSeries", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        foreach (var series in timeSeriesElements)
+        {
+            var meterId = ExtractMeterId(series);
+            if (string.IsNullOrWhiteSpace(meterId))
+            {
+                continue;
+            }
+
+            var periodElements = series
+                .Descendants()
+                .Where(x => x.Name.LocalName.Contains("Period", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            var addedFromPeriod = false;
+            foreach (var period in periodElements)
+            {
+                var values = ExtractQuantities(period);
+                if (values.Count == 0)
+                {
+                    continue;
+                }
+
+                var date = ExtractDate(period) ?? ExtractDate(series) ?? DateOnly.FromDateTime(DateTime.Today);
+                result.Add(new MeterReading(meterId, date, values.Sum()));
+                addedFromPeriod = true;
+            }
+
+            if (addedFromPeriod)
+            {
+                continue;
+            }
+
+            var fallbackValues = ExtractQuantities(series);
+            if (fallbackValues.Count == 0)
+            {
+                continue;
+            }
+
+            var fallbackDate = ExtractDate(series) ?? DateOnly.FromDateTime(DateTime.Today);
+            result.Add(new MeterReading(meterId, fallbackDate, fallbackValues.Sum()));
+        }
+
+        return result;
+    }
+
+    private static string? ExtractMeterId(XElement scope)
+    {
+        var candidateElements = scope.Descendants()
+            .Where(x => x.Name.LocalName.Contains("mRID", StringComparison.OrdinalIgnoreCase)
+                || x.Name.LocalName.Contains("Meter", StringComparison.OrdinalIgnoreCase)
+                || x.Name.LocalName.Contains("Location", StringComparison.OrdinalIgnoreCase));
+
+        foreach (var element in candidateElements)
+        {
+            var match = Regex.Match(element.Value, @"\bCH[0-9A-Z]{10,}\b", RegexOptions.IgnoreCase);
+            if (match.Success)
+            {
+                return match.Value;
+            }
+        }
+
+        var fallbackText = string.Join(' ', scope.Descendants().Select(x => x.Value));
+        var fallbackMatch = Regex.Match(fallbackText, @"\bCH[0-9A-Z]{10,}\b", RegexOptions.IgnoreCase);
+        return fallbackMatch.Success ? fallbackMatch.Value : null;
+    }
+
+    private static List<decimal> ExtractQuantities(XElement scope)
+    {
+        var quantities = new List<decimal>();
+
+        foreach (var element in scope.Descendants())
+        {
+            var localName = element.Name.LocalName;
+            var isLikelyQuantity = localName.Contains("quantity", StringComparison.OrdinalIgnoreCase)
+                || localName.Equals("value", StringComparison.OrdinalIgnoreCase)
+                || localName.EndsWith("qty", StringComparison.OrdinalIgnoreCase);
+
+            if (!isLikelyQuantity)
+            {
+                continue;
+            }
+
+            if (decimal.TryParse(element.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var value))
+            {
+                quantities.Add(value);
+            }
+        }
+
+        return quantities;
+    }
+
+    private static DateOnly? ExtractDate(XElement scope)
+    {
+        var dateCandidates = scope.Descendants()
+            .Where(x => x.Name.LocalName.Contains("start", StringComparison.OrdinalIgnoreCase)
+                || x.Name.LocalName.Contains("date", StringComparison.OrdinalIgnoreCase)
+                || x.Name.LocalName.Contains("time", StringComparison.OrdinalIgnoreCase));
+
+        foreach (var candidate in dateCandidates)
+        {
+            if (DateTime.TryParse(candidate.Value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var parsed))
+            {
+                return DateOnly.FromDateTime(parsed);
+            }
+        }
+
+        return null;
+    }
+
+    private sealed class AppConfig
+    {
+        public List<PropertyMapping> PropertyMappings { get; init; } = [];
+
+        public List<MonthlyPrice> MonthlyPrices { get; init; } = [];
+    }
+
+    public sealed class PropertyMapping
+    {
+        public string PropertyName { get; set; } = string.Empty;
+
+        public string GridMeterId { get; set; } = string.Empty;
+
+        public string PvMeterId { get; set; } = string.Empty;
+    }
+
+    public sealed class MonthlyPrice
+    {
+        public string MonthKey { get; set; } = string.Empty;
+
+        public decimal GridPricePerKwh { get; set; }
+
+        public decimal PvPricePerKwh { get; set; }
+    }
+
+    private sealed class MeterReading(string meterId, DateOnly date, decimal kwh)
+    {
+        public string MeterId { get; } = meterId;
+
+        public DateOnly Date { get; } = date;
+
+        public decimal Kwh { get; } = kwh;
+    }
+
+    public sealed class SummaryRow
+    {
+        public string MonthLabel { get; init; } = string.Empty;
+
+        public string PropertyName { get; init; } = string.Empty;
+
+        public decimal TotalKwh { get; init; }
+
+        public decimal GridKwh { get; init; }
+
+        public decimal PvKwh { get; init; }
+
+        public decimal GridCost { get; init; }
+
+        public decimal PvCost { get; init; }
+
+        public decimal TotalCost => GridCost + PvCost;
+    }
+}

@@ -1,0 +1,1050 @@
+﻿using System.Collections.ObjectModel;
+using System.Globalization;
+using System.IO;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Windows;
+using System.Windows.Controls;
+using System.Xml.Linq;
+using Microsoft.Win32;
+
+namespace ZevEbixApp;
+
+/// <summary>
+/// Interaction logic for MainWindow.xaml
+/// </summary>
+public partial class MainWindow : Window
+{
+    private const string NoPvMeterOption = "<kein PV-Zähler>";
+
+    private readonly ObservableCollection<PropertyMapping> _propertyMappings = [];
+    private readonly ObservableCollection<MonthlyPrice> _monthlyPrices = [];
+    private readonly ObservableCollection<SummaryRow> _summaryRows = [];
+    private readonly List<MeterReading> _meterReadings = [];
+    private readonly ObservableCollection<string> _availableGridMeters = [];
+    private readonly ObservableCollection<string> _availablePvMeters = [];
+
+    private readonly string _configPath = Path.Combine(AppContext.BaseDirectory, "zev-config.json");
+    private bool _isLoadingConfig;
+
+    public MainWindow()
+    {
+        InitializeComponent();
+
+        PropertyMappingsDataGrid.ItemsSource = _propertyMappings;
+        MonthlyPricesDataGrid.ItemsSource = _monthlyPrices;
+        SummaryDataGrid.ItemsSource = _summaryRows;
+
+        GridMeterComboBox.ItemsSource = _availableGridMeters;
+        PvMeterComboBox.ItemsSource = _availablePvMeters;
+        _availablePvMeters.Add(NoPvMeterOption);
+        PvMeterComboBox.SelectedIndex = 0;
+
+        LoadConfig();
+        EnsureMonthlyPricesForYear(2026);
+        AutoSaveConfiguration();
+        TryAutoLoadConfiguredFolderOnStartup();
+        RefreshMonthFilter();
+        RefreshSummary();
+    }
+
+    private void BrowseDataFolderButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFolderDialog
+        {
+            Title = "EBIX-Datenordner auswählen"
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        DataFolderTextBox.Text = dialog.FolderName;
+        AutoSaveConfiguration();
+    }
+
+    private void LoadEbixButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        var folderPath = DataFolderTextBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            MessageBox.Show("Bitte zuerst auf der Konfig-Seite einen gültigen EBIX-Datenordner hinterlegen.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        LoadFolderData(folderPath, showMessages: true);
+    }
+
+    private void LoadFolderData(string folderPath, bool showMessages)
+    {
+        if (!Directory.Exists(folderPath))
+        {
+            LoadedFileText.Text = "Kein Ordner geladen";
+            if (showMessages)
+            {
+                MessageBox.Show("Der konfigurierte Ordner wurde nicht gefunden.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+
+            return;
+        }
+
+        try
+        {
+            var folderValidation = ValidateDataFolderStructure(folderPath);
+            var files = folderValidation.XmlFiles;
+
+            if (files.Count == 0)
+            {
+                LoadedFileText.Text = "Keine XML-Dateien gefunden";
+                if (showMessages)
+                {
+                    MessageBox.Show("Im gewählten Ordner wurden keine XML-Dateien gefunden.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+
+                return;
+            }
+
+            if (showMessages && folderValidation.Warnings.Count > 0)
+            {
+                var shownWarnings = folderValidation.Warnings.Take(6).ToList();
+                var message = string.Join(Environment.NewLine, shownWarnings.Select(x => $"- {x}"));
+                if (folderValidation.Warnings.Count > shownWarnings.Count)
+                {
+                    message += Environment.NewLine + $"- ... und {folderValidation.Warnings.Count - shownWarnings.Count} weitere Hinweise";
+                }
+
+                MessageBox.Show($"Ordnerstruktur-Hinweise:{Environment.NewLine}{message}", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+
+            var parsedFileCount = 0;
+            var failedFileCount = 0;
+            var parsedReadings = new List<MeterReading>();
+
+            foreach (var file in files)
+            {
+                try
+                {
+                    var fileReadings = ParseEbix(file);
+                    if (fileReadings.Count == 0)
+                    {
+                        failedFileCount++;
+                        continue;
+                    }
+
+                    parsedReadings.AddRange(fileReadings);
+                    parsedFileCount++;
+                }
+                catch
+                {
+                    failedFileCount++;
+                }
+            }
+
+            _meterReadings.Clear();
+            _meterReadings.AddRange(parsedReadings);
+
+            LoadedFileText.Text = $"Geladen: {parsedFileCount}/{files.Count} Dateien, {_meterReadings.Count} Werte";
+
+            if (_meterReadings.Count == 0)
+            {
+                if (showMessages)
+                {
+                    MessageBox.Show("Es konnten keine verwertbaren EBIX-Werte erkannt werden.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            else if (showMessages && failedFileCount > 0)
+            {
+                MessageBox.Show($"{failedFileCount} Datei(en) konnten nicht ausgewertet werden.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+
+            RefreshAvailableMeters();
+            EnsureMonthlyPricesForData();
+            AutoSaveConfiguration();
+            RefreshMonthFilter();
+            RefreshSummary();
+        }
+        catch (Exception ex)
+        {
+            LoadedFileText.Text = "Fehler beim Laden";
+            if (showMessages)
+            {
+                MessageBox.Show($"Fehler beim Laden des EBIX-Ordners: {ex.Message}", "Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+
+    private void TryAutoLoadConfiguredFolderOnStartup()
+    {
+        var folderPath = DataFolderTextBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            return;
+        }
+
+        LoadFolderData(folderPath, showMessages: false);
+    }
+
+    private static FolderValidationResult ValidateDataFolderStructure(string rootFolder)
+    {
+        var result = new FolderValidationResult();
+        result.XmlFiles = Directory
+            .EnumerateFiles(rootFolder, "*.xml", SearchOption.AllDirectories)
+            .OrderBy(x => x)
+            .ToList();
+
+        var monthFolders = Directory
+            .EnumerateDirectories(rootFolder)
+            .OrderBy(x => x)
+            .ToList();
+
+        if (monthFolders.Count == 0)
+        {
+            result.Warnings.Add("Es wurden keine Monats-Unterordner im Root-Ordner gefunden.");
+            return result;
+        }
+
+        var rootXmlCount = Directory.EnumerateFiles(rootFolder, "*.xml", SearchOption.TopDirectoryOnly).Count();
+        if (rootXmlCount > 0)
+        {
+            result.Warnings.Add($"Im Root-Ordner liegen {rootXmlCount} XML-Datei(en). Erwartet sind Tagesdateien in Monats-Unterordnern.");
+        }
+
+        foreach (var monthFolder in monthFolders)
+        {
+            var monthFolderName = Path.GetFileName(monthFolder);
+            var isValidMonthFolder = Regex.IsMatch(monthFolderName, @"^\d{4}(-|_)?(0[1-9]|1[0-2])$");
+            if (!isValidMonthFolder)
+            {
+                result.Warnings.Add($"Monatsordner '{monthFolderName}' entspricht nicht dem erwarteten Muster (z. B. 2025-01).");
+            }
+
+            var dayFiles = Directory
+                .EnumerateFiles(monthFolder, "*.xml", SearchOption.TopDirectoryOnly)
+                .OrderBy(x => x)
+                .ToList();
+
+            if (dayFiles.Count == 0)
+            {
+                result.Warnings.Add($"Im Monatsordner '{monthFolderName}' wurden keine Tages-XML-Dateien gefunden.");
+                continue;
+            }
+
+            var hasDateLikeNames = dayFiles
+                .Select(Path.GetFileNameWithoutExtension)
+                .Any(name => name is not null && Regex.IsMatch(name, @"^(\d{8}|\d{4}-\d{2}-\d{2}|\d{4}_\d{2}_\d{2})(?:[_-].+)?$", RegexOptions.IgnoreCase));
+
+            if (!hasDateLikeNames)
+            {
+                result.Warnings.Add($"Im Monatsordner '{monthFolderName}' wurde kein Tagesdateiname im Datumsformat erkannt (z. B. 20250116.xml oder 20250116_155120_ebIX.xml).");
+            }
+        }
+
+        return result;
+    }
+
+    private void AddPropertyMappingButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        var name = PropertyNameTextBox.Text.Trim();
+        var gridMeter = GridMeterComboBox.SelectedItem as string;
+        var pvMeter = NormalizePvMeter(PvMeterComboBox.SelectedItem as string);
+
+        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(gridMeter))
+        {
+            MessageBox.Show("Bitte Liegenschaftsname und Netz-Zähler auswählen.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        _propertyMappings.Add(new PropertyMapping
+        {
+            PropertyName = name,
+            GridMeterId = gridMeter,
+            PvMeterId = pvMeter
+        });
+
+        PropertyNameTextBox.Clear();
+        PvMeterComboBox.SelectedIndex = 0;
+        RefreshSummary();
+    }
+
+    private void ClearPvSelectionButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        PvMeterComboBox.SelectedIndex = 0;
+    }
+
+    private void RemovePropertyMappingButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (PropertyMappingsDataGrid.SelectedItem is not PropertyMapping selected)
+        {
+            return;
+        }
+
+        _propertyMappings.Remove(selected);
+        RefreshSummary();
+    }
+
+    private void ClearSelectedPropertyPvMeterButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (PropertyMappingsDataGrid.SelectedItem is not PropertyMapping selected)
+        {
+            return;
+        }
+
+        selected.PvMeterId = string.Empty;
+        PropertyMappingsDataGrid.Items.Refresh();
+        RefreshSummary();
+    }
+
+    private void SaveConfigButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        CommitMonthlyPriceEdits();
+        SaveConfig();
+        RefreshSummary();
+        MessageBox.Show("Konfiguration gespeichert.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void MonthFilterComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        RefreshSummary();
+    }
+
+    private void RefreshSummaryButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        RefreshSummary();
+    }
+
+    private void ExportCsvButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        ExportCsv(',', CultureInfo.InvariantCulture, "csv", "CSV exportieren");
+    }
+
+    private void ExportExcelCsvButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        ExportCsv(';', CultureInfo.GetCultureInfo("de-CH"), "csv", "Excel-CSV exportieren");
+    }
+
+    private void ExportPdfButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        var rows = _summaryRows.ToList();
+        if (rows.Count == 0)
+        {
+            MessageBox.Show("Keine Daten zum Exportieren vorhanden.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var dialog = new SaveFileDialog
+        {
+            Filter = "PDF (*.pdf)|*.pdf",
+            DefaultExt = "pdf",
+            FileName = BuildExportFileName("pdf"),
+            Title = "PDF exportieren"
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            WriteSimplePdf(dialog.FileName, rows);
+            MessageBox.Show("PDF erfolgreich exportiert.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"PDF-Export fehlgeschlagen: {ex.Message}", "Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void RefreshAvailableMeters()
+    {
+        var meters = _meterReadings.Select(x => x.MeterId).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToList();
+
+        _availableGridMeters.Clear();
+        foreach (var meter in meters)
+        {
+            _availableGridMeters.Add(meter);
+        }
+
+        _availablePvMeters.Clear();
+        _availablePvMeters.Add(NoPvMeterOption);
+        foreach (var meter in meters)
+        {
+            _availablePvMeters.Add(meter);
+        }
+
+        if (PvMeterComboBox.SelectedItem is null)
+        {
+            PvMeterComboBox.SelectedIndex = 0;
+        }
+    }
+
+    private void RefreshMonthFilter()
+    {
+        var months = _meterReadings
+            .Select(x => x.Date.ToString("yyyy-MM", CultureInfo.InvariantCulture))
+            .Distinct()
+            .OrderBy(x => x)
+            .ToList();
+
+        MonthFilterComboBox.Items.Clear();
+        MonthFilterComboBox.Items.Add("Alle");
+
+        foreach (var month in months)
+        {
+            MonthFilterComboBox.Items.Add(month);
+        }
+
+        if (MonthFilterComboBox.SelectedItem is null)
+        {
+            MonthFilterComboBox.SelectedIndex = 0;
+        }
+    }
+
+    private string? GetSelectedMonth()
+    {
+        if (MonthFilterComboBox.SelectedItem is not string value || value == "Alle")
+        {
+            return null;
+        }
+
+        return value;
+    }
+
+    private void RefreshSummary()
+    {
+        _summaryRows.Clear();
+
+        if (_propertyMappings.Count == 0 || _meterReadings.Count == 0)
+        {
+            return;
+        }
+
+        var selectedMonth = GetSelectedMonth();
+        var allMonths = _meterReadings
+            .Select(x => x.Date.ToString("yyyy-MM", CultureInfo.InvariantCulture))
+            .Distinct()
+            .OrderBy(x => x)
+            .ToList();
+
+        var monthsToEvaluate = selectedMonth is null ? allMonths : [selectedMonth];
+
+        foreach (var mapping in _propertyMappings)
+        {
+            foreach (var month in monthsToEvaluate)
+            {
+                var gridKwh = SumMeterKwh(mapping.GridMeterId, month);
+                var pvKwh = SumMeterKwh(mapping.PvMeterId, month);
+                var totalKwh = gridKwh + pvKwh;
+
+                if (totalKwh <= 0)
+                {
+                    continue;
+                }
+
+                var price = GetPriceForMonth(month);
+                var gridCost = gridKwh * price.GridPricePerKwh;
+                var pvCost = pvKwh * price.PvPricePerKwh;
+
+                _summaryRows.Add(new SummaryRow
+                {
+                    MonthLabel = month,
+                    PropertyName = mapping.PropertyName,
+                    TotalKwh = totalKwh,
+                    GridKwh = gridKwh,
+                    PvKwh = pvKwh,
+                    GridCost = gridCost,
+                    PvCost = pvCost
+                });
+            }
+        }
+    }
+
+    private decimal SumMeterKwh(string meterId, string month)
+    {
+        if (string.IsNullOrWhiteSpace(meterId))
+        {
+            return 0m;
+        }
+
+        return _meterReadings
+            .Where(x => string.Equals(x.MeterId, meterId, StringComparison.OrdinalIgnoreCase)
+                && x.Date.ToString("yyyy-MM", CultureInfo.InvariantCulture) == month)
+            .Sum(x => x.Kwh);
+    }
+
+    private static string NormalizePvMeter(string? selectedValue)
+    {
+        if (string.IsNullOrWhiteSpace(selectedValue) || selectedValue == NoPvMeterOption)
+        {
+            return string.Empty;
+        }
+
+        return selectedValue;
+    }
+
+    private MonthlyPrice GetPriceForMonth(string month)
+    {
+        return _monthlyPrices.FirstOrDefault(x => x.MonthKey == month) ?? new MonthlyPrice();
+    }
+
+    private void EnsureMonthlyPricesForData()
+    {
+        var months = _meterReadings
+            .Select(x => x.Date.ToString("yyyy-MM", CultureInfo.InvariantCulture))
+            .Distinct()
+            .OrderBy(x => x)
+            .ToList();
+
+        foreach (var month in months)
+        {
+            if (_monthlyPrices.Any(x => x.MonthKey == month))
+            {
+                continue;
+            }
+
+            _monthlyPrices.Add(new MonthlyPrice
+            {
+                MonthKey = month,
+                GridPricePerKwh = 0m,
+                PvPricePerKwh = 0m
+            });
+        }
+
+        SortMonthlyPrices();
+    }
+
+    private void EnsureMonthlyPricesForYear(int year)
+    {
+        for (var month = 1; month <= 12; month++)
+        {
+            var monthKey = $"{year:D4}-{month:D2}";
+            if (_monthlyPrices.Any(x => x.MonthKey == monthKey))
+            {
+                continue;
+            }
+
+            _monthlyPrices.Add(new MonthlyPrice
+            {
+                MonthKey = monthKey,
+                GridPricePerKwh = 0m,
+                PvPricePerKwh = 0m
+            });
+        }
+
+        SortMonthlyPrices();
+    }
+
+    private void CommitMonthlyPriceEdits()
+    {
+        MonthlyPricesDataGrid.CommitEdit(DataGridEditingUnit.Cell, true);
+        MonthlyPricesDataGrid.CommitEdit(DataGridEditingUnit.Row, true);
+    }
+
+    private void SortMonthlyPrices()
+    {
+        var ordered = _monthlyPrices
+            .OrderBy(x => x.MonthKey, StringComparer.Ordinal)
+            .ToList();
+
+        _monthlyPrices.Clear();
+        foreach (var entry in ordered)
+        {
+            _monthlyPrices.Add(entry);
+        }
+    }
+
+    private void LoadConfig()
+    {
+        if (!File.Exists(_configPath))
+        {
+            return;
+        }
+
+        var content = File.ReadAllText(_configPath);
+        var config = JsonSerializer.Deserialize<AppConfig>(content);
+        if (config is null)
+        {
+            return;
+        }
+
+        _propertyMappings.Clear();
+        foreach (var mapping in config.PropertyMappings)
+        {
+            _propertyMappings.Add(mapping);
+        }
+
+        _monthlyPrices.Clear();
+        foreach (var price in config.MonthlyPrices)
+        {
+            _monthlyPrices.Add(price);
+        }
+
+        DataFolderTextBox.Text = config.DataFolderPath;
+    }
+
+    private void SaveConfig()
+    {
+        var config = new AppConfig
+        {
+            PropertyMappings = _propertyMappings.ToList(),
+            MonthlyPrices = _monthlyPrices.Where(x => !string.IsNullOrWhiteSpace(x.MonthKey)).ToList(),
+            DataFolderPath = DataFolderTextBox.Text.Trim()
+        };
+
+        var json = JsonSerializer.Serialize(config, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+
+        File.WriteAllText(_configPath, json);
+    }
+
+    private void ExportCsv(char separator, CultureInfo culture, string extension, string title)
+    {
+        var rows = _summaryRows.ToList();
+        if (rows.Count == 0)
+        {
+            MessageBox.Show("Keine Daten zum Exportieren vorhanden.", "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var dialog = new SaveFileDialog
+        {
+            Filter = "CSV (*.csv)|*.csv",
+            DefaultExt = extension,
+            FileName = BuildExportFileName(extension),
+            Title = title
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var csv = BuildCsv(rows, separator, culture);
+            File.WriteAllText(dialog.FileName, csv, new UTF8Encoding(true));
+            MessageBox.Show("Export erfolgreich erstellt.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Export fehlgeschlagen: {ex.Message}", "Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private string BuildExportFileName(string extension)
+    {
+        var month = GetSelectedMonth() ?? "alle-monate";
+        return $"zev-abrechnung-{month}.{extension}";
+    }
+
+    private static string BuildCsv(IReadOnlyCollection<SummaryRow> rows, char separator, CultureInfo culture)
+    {
+        var sb = new StringBuilder();
+        sb.AppendJoin(separator, [
+            "Monat",
+            "Liegenschaft",
+            "Verbrauch total (kWh)",
+            "Netzbezug (kWh)",
+            "PV-Strom (kWh)",
+            "Netzkosten (CHF)",
+            "PV-Kosten (CHF)",
+            "Gesamtkosten (CHF)"]);
+        sb.AppendLine();
+
+        foreach (var row in rows)
+        {
+            var values = new[]
+            {
+                row.MonthLabel,
+                row.PropertyName,
+                row.TotalKwh.ToString("N3", culture),
+                row.GridKwh.ToString("N3", culture),
+                row.PvKwh.ToString("N3", culture),
+                row.GridCost.ToString("N2", culture),
+                row.PvCost.ToString("N2", culture),
+                row.TotalCost.ToString("N2", culture)
+            };
+
+            sb.AppendJoin(separator, values.Select(x => EscapeCsvValue(x, separator)));
+            sb.AppendLine();
+        }
+
+        return sb.ToString();
+    }
+
+    private static string EscapeCsvValue(string value, char separator)
+    {
+        if (!value.Contains(separator) && !value.Contains('"') && !value.Contains('\n') && !value.Contains('\r'))
+        {
+            return value;
+        }
+
+        return $"\"{value.Replace("\"", "\"\"")}\"";
+    }
+
+    private static void WriteSimplePdf(string filePath, IReadOnlyCollection<SummaryRow> rows)
+    {
+        var tableLines = new List<string>
+        {
+            "ZEV Abrechnung (gefilterte Ansicht)",
+            string.Empty,
+            "Monat | Liegenschaft | Total kWh | Netz kWh | PV kWh | Netz CHF | PV CHF | Total CHF",
+            new string('-', 120)
+        };
+
+        foreach (var row in rows)
+        {
+            tableLines.Add(
+                $"{row.MonthLabel} | {row.PropertyName} | {row.TotalKwh:N3} | {row.GridKwh:N3} | {row.PvKwh:N3} | {row.GridCost:N2} | {row.PvCost:N2} | {row.TotalCost:N2}");
+        }
+
+        var pages = SplitIntoPages(tableLines, 46);
+        var pageCount = pages.Count;
+        var fontObjectId = 3 + (pageCount * 2);
+        var maxObjectId = fontObjectId;
+        var objects = new Dictionary<int, byte[]>();
+
+        objects[1] = Encoding.ASCII.GetBytes("<< /Type /Catalog /Pages 2 0 R >>");
+
+        var kids = string.Join(' ', Enumerable.Range(0, pageCount).Select(i => $"{3 + (i * 2)} 0 R"));
+        objects[2] = Encoding.ASCII.GetBytes($"<< /Type /Pages /Count {pageCount} /Kids [{kids}] >>");
+
+        for (var i = 0; i < pageCount; i++)
+        {
+            var pageObjectId = 3 + (i * 2);
+            var contentObjectId = pageObjectId + 1;
+
+            objects[pageObjectId] = Encoding.ASCII.GetBytes($"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 {fontObjectId} 0 R >> >> /Contents {contentObjectId} 0 R >>");
+
+            var streamText = BuildPdfTextStream(pages[i]);
+            var streamBytes = Encoding.ASCII.GetBytes(streamText);
+            var contentBuilder = new StringBuilder();
+            contentBuilder.AppendLine($"<< /Length {streamBytes.Length} >>");
+            contentBuilder.AppendLine("stream");
+            contentBuilder.Append(streamText);
+            contentBuilder.AppendLine();
+            contentBuilder.Append("endstream");
+            objects[contentObjectId] = Encoding.ASCII.GetBytes(contentBuilder.ToString());
+        }
+
+        objects[fontObjectId] = Encoding.ASCII.GetBytes("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+
+        using var ms = new MemoryStream();
+        using var writer = new StreamWriter(ms, Encoding.ASCII, leaveOpen: true);
+
+        writer.WriteLine("%PDF-1.4");
+        writer.Flush();
+
+        var offsets = new long[maxObjectId + 1];
+        for (var id = 1; id <= maxObjectId; id++)
+        {
+            offsets[id] = ms.Position;
+            writer.WriteLine($"{id} 0 obj");
+            writer.Flush();
+            ms.Write(objects[id]);
+            writer.WriteLine();
+            writer.WriteLine("endobj");
+            writer.Flush();
+        }
+
+        var startXref = ms.Position;
+        writer.WriteLine("xref");
+        writer.WriteLine($"0 {maxObjectId + 1}");
+        writer.WriteLine("0000000000 65535 f ");
+        for (var id = 1; id <= maxObjectId; id++)
+        {
+            writer.WriteLine($"{offsets[id]:D10} 00000 n ");
+        }
+
+        writer.WriteLine($"trailer << /Size {maxObjectId + 1} /Root 1 0 R >>");
+        writer.WriteLine("startxref");
+        writer.WriteLine(startXref.ToString(CultureInfo.InvariantCulture));
+        writer.Write("%%EOF");
+        writer.Flush();
+
+        File.WriteAllBytes(filePath, ms.ToArray());
+    }
+
+    private static List<List<string>> SplitIntoPages(IReadOnlyList<string> lines, int pageSize)
+    {
+        var pages = new List<List<string>>();
+        for (var i = 0; i < lines.Count; i += pageSize)
+        {
+            pages.Add(lines.Skip(i).Take(pageSize).ToList());
+        }
+
+        if (pages.Count == 0)
+        {
+            pages.Add([]);
+        }
+
+        return pages;
+    }
+
+    private static string BuildPdfTextStream(IEnumerable<string> lines)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("BT");
+        sb.AppendLine("/F1 10 Tf");
+        sb.AppendLine("40 800 Td");
+
+        var first = true;
+        foreach (var line in lines)
+        {
+            if (!first)
+            {
+                sb.AppendLine("0 -15 Td");
+            }
+
+            sb.AppendLine($"({EscapePdfText(line)}) Tj");
+            first = false;
+        }
+
+        sb.AppendLine("ET");
+        return sb.ToString();
+    }
+
+    private static string EscapePdfText(string text)
+    {
+        return text
+            .Replace("\\", "\\\\", StringComparison.Ordinal)
+            .Replace("(", "\\(", StringComparison.Ordinal)
+            .Replace(")", "\\)", StringComparison.Ordinal);
+    }
+
+    private static List<MeterReading> ParseEbix(string filePath)
+    {
+        var document = XDocument.Load(filePath, LoadOptions.PreserveWhitespace);
+        var result = new List<MeterReading>();
+
+        var periodElements = document
+            .Descendants()
+            .Where(x => x.Name.LocalName.Contains("period", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        foreach (var period in periodElements)
+        {
+            var meterId = ExtractMeterId(period)
+                ?? period.Ancestors().Select(ExtractMeterId).FirstOrDefault(x => !string.IsNullOrWhiteSpace(x));
+            if (string.IsNullOrWhiteSpace(meterId))
+            {
+                continue;
+            }
+
+            var values = ExtractQuantities(period);
+            if (values.Count == 0)
+            {
+                continue;
+            }
+
+            var date = ExtractDate(period)
+                ?? period.Ancestors().Select(ExtractDate).FirstOrDefault(x => x.HasValue)
+                ?? DateOnly.FromDateTime(File.GetLastWriteTime(filePath));
+
+            result.Add(new MeterReading(meterId, date, values.Sum()));
+        }
+
+        if (result.Count == 0)
+        {
+            var text = File.ReadAllText(filePath);
+            var meterIds = Regex.Matches(text, @"\bCH[0-9A-Z]{10,}\b", RegexOptions.IgnoreCase)
+                .Select(x => x.Value)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var numericValues = Regex.Matches(text, @"(?<![0-9])(\d+[\.,]\d+)(?![0-9])")
+                .Select(x => ParseDecimalFlexible(x.Groups[1].Value))
+                .Where(x => x.HasValue)
+                .Select(x => x!.Value)
+                .ToList();
+
+            if (meterIds.Count > 0 && numericValues.Count > 0)
+            {
+                var kwh = numericValues.Sum();
+                var date = DateOnly.FromDateTime(File.GetLastWriteTime(filePath));
+
+                foreach (var meterId in meterIds)
+                {
+                    result.Add(new MeterReading(meterId, date, kwh));
+                }
+            }
+        }
+
+        return result
+            .GroupBy(x => new { x.MeterId, x.Date })
+            .Select(g => new MeterReading(g.Key.MeterId, g.Key.Date, g.Sum(x => x.Kwh)))
+            .ToList();
+    }
+
+    private static string? ExtractMeterId(XElement scope)
+    {
+        var candidateElements = scope.Descendants()
+            .Where(x => x.Name.LocalName.Contains("mRID", StringComparison.OrdinalIgnoreCase)
+                || x.Name.LocalName.Contains("Meter", StringComparison.OrdinalIgnoreCase)
+                || x.Name.LocalName.Contains("Location", StringComparison.OrdinalIgnoreCase));
+
+        foreach (var element in candidateElements)
+        {
+            var match = Regex.Match(element.Value, @"\bCH[0-9A-Z]{10,}\b", RegexOptions.IgnoreCase);
+            if (match.Success)
+            {
+                return match.Value;
+            }
+        }
+
+        var fallbackText = string.Join(' ', scope.Descendants().Select(x => x.Value));
+        var fallbackMatch = Regex.Match(fallbackText, @"\bCH[0-9A-Z]{10,}\b", RegexOptions.IgnoreCase);
+        return fallbackMatch.Success ? fallbackMatch.Value : null;
+    }
+
+    private static List<decimal> ExtractQuantities(XElement scope)
+    {
+        var quantities = new List<decimal>();
+
+        foreach (var element in scope.Descendants())
+        {
+            var localName = element.Name.LocalName;
+            var isLikelyQuantity = localName.Contains("quantity", StringComparison.OrdinalIgnoreCase)
+                || localName.Contains("energy", StringComparison.OrdinalIgnoreCase)
+                || localName.Equals("value", StringComparison.OrdinalIgnoreCase)
+                || localName.EndsWith("qty", StringComparison.OrdinalIgnoreCase);
+
+            if (!isLikelyQuantity)
+            {
+                continue;
+            }
+
+            var parsed = ParseDecimalFlexible(element.Value);
+            if (parsed.HasValue)
+            {
+                quantities.Add(parsed.Value);
+            }
+        }
+
+        if (quantities.Count > 0)
+        {
+            return quantities;
+        }
+
+        var fallbackMatches = Regex.Matches(scope.Value, @"(?<![0-9])(\d+[\.,]\d+)(?![0-9])");
+        foreach (Match match in fallbackMatches)
+        {
+            var parsed = ParseDecimalFlexible(match.Groups[1].Value);
+            if (parsed.HasValue)
+            {
+                quantities.Add(parsed.Value);
+            }
+        }
+
+        return quantities;
+    }
+
+    private static DateOnly? ExtractDate(XElement scope)
+    {
+        var dateCandidates = scope.Descendants()
+            .Where(x => x.Name.LocalName.Contains("start", StringComparison.OrdinalIgnoreCase)
+                || x.Name.LocalName.Contains("date", StringComparison.OrdinalIgnoreCase)
+                || x.Name.LocalName.Contains("time", StringComparison.OrdinalIgnoreCase));
+
+        foreach (var candidate in dateCandidates)
+        {
+            if (DateTime.TryParse(candidate.Value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var parsed)
+                || DateTime.TryParse(candidate.Value, CultureInfo.GetCultureInfo("de-CH"), DateTimeStyles.AssumeLocal, out parsed))
+            {
+                return DateOnly.FromDateTime(parsed);
+            }
+        }
+
+        var textMatch = Regex.Match(scope.Value, @"\b(20\d{2}-\d{2}-\d{2})\b");
+        if (textMatch.Success
+            && DateOnly.TryParseExact(textMatch.Groups[1].Value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+        {
+            return date;
+        }
+
+        return null;
+    }
+
+    private static decimal? ParseDecimalFlexible(string value)
+    {
+        var trimmed = value.Trim();
+        if (decimal.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var parsedInvariant))
+        {
+            return parsedInvariant;
+        }
+
+        var normalized = trimmed.Replace(',', '.');
+        if (decimal.TryParse(normalized, NumberStyles.Any, CultureInfo.InvariantCulture, out var parsedNormalized))
+        {
+            return parsedNormalized;
+        }
+
+        return null;
+    }
+
+    private sealed class AppConfig
+    {
+        public List<PropertyMapping> PropertyMappings { get; init; } = [];
+
+        public List<MonthlyPrice> MonthlyPrices { get; init; } = [];
+
+        public string DataFolderPath { get; init; } = string.Empty;
+    }
+
+    private sealed class FolderValidationResult
+    {
+        public List<string> Warnings { get; } = [];
+
+        public List<string> XmlFiles { get; set; } = [];
+    }
+
+    public sealed class PropertyMapping
+    {
+        public string PropertyName { get; set; } = string.Empty;
+
+        public string GridMeterId { get; set; } = string.Empty;
+
+        public string PvMeterId { get; set; } = string.Empty;
+    }
+
+    public sealed class MonthlyPrice
+    {
+        public string MonthKey { get; set; } = string.Empty;
+
+        public decimal GridPricePerKwh { get; set; }
+
+        public decimal PvPricePerKwh { get; set; }
+    }
+
+    private sealed class MeterReading(string meterId, DateOnly date, decimal kwh)
+    {
+        public string MeterId { get; } = meterId;
+
+        public DateOnly Date { get; } = date;
+
+        public decimal Kwh { get; } = kwh;
+    }
+
+    public sealed class SummaryRow
+    {
+        public string MonthLabel { get; init; } = string.Empty;
+
+        public string PropertyName { get; init; } = string.Empty;
+
+        public decimal TotalKwh { get; init; }
+
+        public decimal GridKwh { get; init; }
+
+        public decimal PvKwh { get; init; }
+
+        public decimal GridCost { get; init; }
+
+        public decimal PvCost { get; init; }
+
+        public decimal TotalCost => GridCost + PvCost;
+    }
+}
