@@ -6,9 +6,14 @@ Dieses Add-on startet die ZEV-Weboberfläche direkt in Home Assistant (Ingress).
 - CSV/XML Import aus lokalem Pfad oder Dropbox-Link
 - ZEV Monatsauswertung inkl. Bezug/Rücklieferung
 - Konfigurierbare Zähler-/Preiszuordnung
+- Öffentliche Read-only Auswertung unter `/strom` mit Basic Auth
 
 ## Datenpersistenz
 Die Konfiguration wird in `/data/zev-config-web.json` gespeichert.
+
+## Optionen
+- `public_username`: Benutzername für `/strom`
+- `public_password`: Passwort für `/strom`
 
 ## Installation
 1. In Home Assistant: **Einstellungen > Add-ons > Add-on Store > Repositories**.

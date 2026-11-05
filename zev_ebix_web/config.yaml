@@ -18,5 +18,9 @@ hassio_api: false
 homeassistant_api: false
 ports: {}
 ports_description: {}
-options: {}
-schema: {}
+options:
+  public_username: ""
+  public_password: ""
+schema:
+  public_username: str?
+  public_password: password?
