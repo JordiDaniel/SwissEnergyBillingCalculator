@@ -79,6 +79,81 @@ public sealed class BillingEngine(IHttpClientFactory httpClientFactory)
             .ToList();
     }
 
+    public List<string> GetAvailableProperties(AppConfig config)
+    {
+        return config.PropertyMappings
+            .Where(x => !string.IsNullOrWhiteSpace(x.PropertyName) && !string.IsNullOrWhiteSpace(x.GridMeterId))
+            .Select(x => x.PropertyName)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    public PropertyHourlyConsumptionView? BuildHourlyConsumption(
+        AppConfig config,
+        IReadOnlyCollection<MeterReading> readings,
+        string propertyName,
+        DateOnly? selectedDate)
+    {
+        if (string.IsNullOrWhiteSpace(propertyName))
+        {
+            return null;
+        }
+
+        var mapping = config.PropertyMappings.FirstOrDefault(x =>
+            string.Equals(x.PropertyName, propertyName, StringComparison.OrdinalIgnoreCase)
+            && !string.IsNullOrWhiteSpace(x.GridMeterId));
+
+        if (mapping is null)
+        {
+            return null;
+        }
+
+        var meterReadings = readings
+            .Where(x => string.Equals(x.MeterId, mapping.GridMeterId, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(x => x.PeriodStart)
+            .ToList();
+
+        if (meterReadings.Count == 0)
+        {
+            return null;
+        }
+
+        var availableDates = meterReadings
+            .Select(x => DateOnly.FromDateTime(x.PeriodStart))
+            .Distinct()
+            .OrderByDescending(x => x)
+            .ToList();
+
+        var targetDate = selectedDate ?? availableDates.First();
+        if (!availableDates.Contains(targetDate))
+        {
+            targetDate = availableDates.First();
+        }
+
+        var hourlyValues = meterReadings
+            .Where(x => DateOnly.FromDateTime(x.PeriodStart) == targetDate)
+            .GroupBy(x => x.PeriodStart.Hour)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Kwh));
+
+        var hourRows = Enumerable.Range(0, 24)
+            .Select(hour => new PropertyHourlyConsumptionRow
+            {
+                Hour = hour,
+                Kwh = hourlyValues.TryGetValue(hour, out var value) ? value : 0m
+            })
+            .ToList();
+
+        return new PropertyHourlyConsumptionView
+        {
+            PropertyName = mapping.PropertyName,
+            Date = targetDate,
+            DailyTotalKwh = hourRows.Sum(x => x.Kwh),
+            AvailableDates = availableDates,
+            Hours = hourRows
+        };
+    }
+
     public List<SummaryRow> BuildSummary(AppConfig config, IReadOnlyCollection<MeterReading> readings, string? selectedMonth)
     {
         if (config.PropertyMappings.Count == 0 || readings.Count == 0)

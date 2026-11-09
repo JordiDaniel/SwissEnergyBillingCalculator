@@ -4,6 +4,15 @@ using ZevEbixWeb.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var internalPort = ReadPort("ZEV_INTERNAL_PORT", 8080);
+var publicPort = ReadPort("ZEV_PUBLIC_PORT", 8081);
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(internalPort);
+    options.ListenAnyIP(publicPort);
+});
+
 builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AddPageRoute("/Public", "/strom");
@@ -19,24 +28,35 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    app.UseHsts();
 }
 
 app.UseRouting();
 
 app.Use(async (context, next) =>
 {
-    if (!context.Request.Path.StartsWithSegments("/strom", StringComparison.OrdinalIgnoreCase) || !publicAccess.Enabled)
-    {
-        await next();
-        return;
-    }
+    var requestPort = context.Connection.LocalPort;
+    var path = context.Request.Path;
 
-    if (!IsAuthorized(context.Request.Headers.Authorization.ToString(), publicAccess))
+    if (requestPort == publicPort)
     {
-        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        context.Response.Headers.WWWAuthenticate = "Basic realm=\"ZEV Strom\"";
-        await context.Response.WriteAsync("Unauthorized");
+        var isPublicPage = path.StartsWithSegments("/strom", StringComparison.OrdinalIgnoreCase);
+        if (!isPublicPage && !IsStaticAssetRequest(path))
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        if (isPublicPage && publicAccess.Enabled && !IsAuthorized(context.Request.Headers.Authorization.ToString(), publicAccess))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.Headers.WWWAuthenticate = "Basic realm=\"ZEV Strom\"";
+            await context.Response.WriteAsync("Unauthorized");
+            return;
+        }
+    }
+    else if (requestPort == internalPort && path.StartsWithSegments("/strom", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
         return;
     }
 
@@ -55,6 +75,21 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+static int ReadPort(string envVar, int fallback)
+{
+    var value = Environment.GetEnvironmentVariable(envVar);
+    return int.TryParse(value, out var parsed) && parsed > 0 ? parsed : fallback;
+}
+
+static bool IsStaticAssetRequest(PathString path)
+{
+    return path.StartsWithSegments("/css", StringComparison.OrdinalIgnoreCase)
+           || path.StartsWithSegments("/js", StringComparison.OrdinalIgnoreCase)
+           || path.StartsWithSegments("/lib", StringComparison.OrdinalIgnoreCase)
+           || path.StartsWithSegments("/favicon.ico", StringComparison.OrdinalIgnoreCase)
+           || path.Value?.Contains(".styles.css", StringComparison.OrdinalIgnoreCase) == true;
+}
 
 static PublicAccessSettings LoadPublicAccessSettings()
 {

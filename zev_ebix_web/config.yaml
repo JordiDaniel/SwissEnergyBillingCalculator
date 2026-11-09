@@ -16,8 +16,10 @@ panel_icon: mdi:flash
 panel_title: ZEV Abrechnung
 hassio_api: false
 homeassistant_api: false
-ports: {}
-ports_description: {}
+ports:
+  8081/tcp: 8081
+ports_description:
+  8081/tcp: Öffentliche Strom-Ansicht (/strom)
 options:
   public_username: ""
   public_password: ""

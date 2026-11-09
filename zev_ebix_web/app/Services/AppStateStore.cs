@@ -32,6 +32,11 @@ public sealed class AppStateStore(BillingEngine engine, IWebHostEnvironment env)
                 }
             }
 
+            if (string.IsNullOrWhiteSpace(Config.DataFolderPath))
+            {
+                Config.DataFolderPath = GetDefaultDataSourcePath();
+            }
+
             NormalizePriorities();
             EnsureMonthlyPricesForYear(DateTime.UtcNow.Year);
         }
@@ -142,5 +147,16 @@ public sealed class AppStateStore(BillingEngine engine, IWebHostEnvironment env)
         }
 
         return Path.Combine(env.ContentRootPath, "data");
+    }
+
+    private static string GetDefaultDataSourcePath()
+    {
+        var configured = Environment.GetEnvironmentVariable("ZEV_DEFAULT_SOURCE_PATH")?.Trim();
+        if (!string.IsNullOrWhiteSpace(configured))
+        {
+            return configured;
+        }
+
+        return "/share/vzev";
     }
 }

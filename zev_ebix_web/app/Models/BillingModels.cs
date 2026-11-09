@@ -48,6 +48,21 @@ public sealed class SummaryRow
     public decimal TotalCost => GridCost + PvCost - PvRevenue;
 }
 
+public sealed class PropertyHourlyConsumptionRow
+{
+    public int Hour { get; init; }
+    public decimal Kwh { get; init; }
+}
+
+public sealed class PropertyHourlyConsumptionView
+{
+    public string PropertyName { get; init; } = string.Empty;
+    public DateOnly Date { get; init; }
+    public decimal DailyTotalKwh { get; init; }
+    public List<DateOnly> AvailableDates { get; init; } = [];
+    public List<PropertyHourlyConsumptionRow> Hours { get; init; } = [];
+}
+
 public sealed class BillingLoadResult
 {
     public required List<MeterReading> Readings { get; init; }

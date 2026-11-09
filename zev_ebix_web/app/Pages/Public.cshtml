@@ -4,45 +4,74 @@
     ViewData["Title"] = "Stromauswertung";
 }
 
-<h2>Stromauswertung</h2>
-<div class="mb-3"><strong>Status:</strong> @Model.StatusText</div>
-
-<div class="table-responsive">
-    <table class="table table-striped table-sm">
-        <thead>
-        <tr>
-            <th>Monat</th>
-            <th>Liegenschaft</th>
-            <th>Total kWh</th>
-            <th>Netz kWh</th>
-            <th>PV kWh</th>
-            <th>Einspeisung kWh</th>
-            <th>ZEV Bezug kWh</th>
-            <th>ZEV Rücklieferung kWh</th>
-            <th>Netz CHF</th>
-            <th>PV CHF</th>
-            <th>PV Erlös CHF</th>
-            <th>Saldo CHF</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var row in Model.SummaryRows)
+<div class="public-dashboard py-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="h4 mb-1">Stromauswertung</h2>
+            <div class="text-muted small">@Model.StatusText</div>
+        </div>
+        @if (Model.HourlyConsumption is not null)
         {
-            <tr>
-                <td>@row.MonthLabel</td>
-                <td>@row.PropertyName</td>
-                <td>@row.TotalKwh.ToString("N3")</td>
-                <td>@row.GridKwh.ToString("N3")</td>
-                <td>@row.PvKwh.ToString("N3")</td>
-                <td>@row.FeedInKwh.ToString("N3")</td>
-                <td>@row.ZevImportKwh.ToString("N3")</td>
-                <td>@row.ZevExportKwh.ToString("N3")</td>
-                <td>@row.GridCost.ToString("N2")</td>
-                <td>@row.PvCost.ToString("N2")</td>
-                <td>@row.PvRevenue.ToString("N2")</td>
-                <td>@row.TotalCost.ToString("N2")</td>
-            </tr>
+            <div class="public-total-card">
+                <div class="small text-muted">Tagesverbrauch</div>
+                <div class="fs-4 fw-semibold">@Model.HourlyConsumption.DailyTotalKwh.ToString("N3") kWh</div>
+            </div>
         }
-        </tbody>
-    </table>
+    </div>
+
+    <form method="get" class="row g-2 align-items-end mb-3">
+        <div class="col-12 col-md-6">
+            <label for="property" class="form-label">Liegenschaft</label>
+            <select id="property" name="property" class="form-select">
+                @foreach (var propertyName in Model.AvailableProperties)
+                {
+                    var selected = string.Equals(Model.PropertyName, propertyName, StringComparison.OrdinalIgnoreCase);
+                    <option value="@propertyName" selected="@selected">@propertyName</option>
+                }
+            </select>
+        </div>
+        <div class="col-12 col-md-4">
+            <label for="day" class="form-label">Tag</label>
+            <select id="day" name="day" class="form-select" @(Model.HourlyConsumption is null ? "disabled" : null)>
+                @if (Model.HourlyConsumption is not null)
+                {
+                    foreach (var day in Model.HourlyConsumption.AvailableDates)
+                    {
+                        var dayValue = day.ToString("yyyy-MM-dd");
+                        <option value="@dayValue" selected="@(Model.Day == dayValue)">@day.ToString("dd.MM.yyyy")</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-12 col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Anzeigen</button>
+        </div>
+    </form>
+
+    @if (!string.IsNullOrWhiteSpace(Model.InfoText))
+    {
+        <div class="alert alert-info">@Model.InfoText</div>
+    }
+    else if (Model.HourlyConsumption is not null)
+    {
+        <div class="table-responsive">
+            <table class="table table-hover table-sm align-middle">
+                <thead>
+                <tr>
+                    <th>Stunde</th>
+                    <th class="text-end">Verbrauch (kWh)</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var hour in Model.HourlyConsumption.Hours)
+                {
+                    <tr>
+                        <td>@($"{hour.Hour:D2}:00 - {hour.Hour:D2}:59")</td>
+                        <td class="text-end fw-semibold">@hour.Kwh.ToString("N3")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
 </div>

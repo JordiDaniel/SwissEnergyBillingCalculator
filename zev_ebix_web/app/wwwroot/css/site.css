@@ -21,6 +21,18 @@ body {
   margin-bottom: 60px;
 }
 
+.public-dashboard {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.public-total-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+}
+
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
   color: var(--bs-secondary-color);
   text-align: end;

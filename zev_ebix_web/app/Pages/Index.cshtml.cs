@@ -11,9 +11,6 @@ public class IndexModel(AppStateStore store) : PageModel
     public string DataSource { get; set; } = string.Empty;
 
     [BindProperty]
-    public string SelectedMonth { get; set; } = "Alle";
-
-    [BindProperty]
     public string PvDistributionMode { get; set; } = BillingEngine.PvDistributionModeFair;
 
     [BindProperty]
@@ -31,8 +28,6 @@ public class IndexModel(AppStateStore store) : PageModel
     public string StatusText => store.StatusText;
     public List<string> Warnings => store.Warnings;
     public List<string> AvailableMeters => store.AvailableMeters;
-    public List<string> AvailableMonths => ["Alle", .. store.AvailableMonths];
-    public List<SummaryRow> SummaryRows => store.SummaryRows;
 
     public async Task OnGetAsync(CancellationToken cancellationToken)
     {
@@ -54,7 +49,7 @@ public class IndexModel(AppStateStore store) : PageModel
 
         try
         {
-            await store.LoadDataAsync(DataSource, NormalizeMonth(SelectedMonth), cancellationToken);
+            await store.LoadDataAsync(DataSource, selectedMonth: null, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -69,7 +64,7 @@ public class IndexModel(AppStateStore store) : PageModel
     {
         await store.InitializeAsync(cancellationToken);
         ApplyToState();
-        await store.SaveConfigAndRefreshAsync(NormalizeMonth(SelectedMonth), cancellationToken);
+        await store.SaveConfigAndRefreshAsync(selectedMonth: null, cancellationToken);
         LoadFromState();
         return Page();
     }
@@ -79,7 +74,7 @@ public class IndexModel(AppStateStore store) : PageModel
         await store.InitializeAsync(cancellationToken);
         ApplyToState();
         store.Config.PropertyMappings.Add(new PropertyMapping { PvPriority = store.Config.PropertyMappings.Count + 1 });
-        await store.SaveConfigAndRefreshAsync(NormalizeMonth(SelectedMonth), cancellationToken);
+        await store.SaveConfigAndRefreshAsync(selectedMonth: null, cancellationToken);
         LoadFromState();
         return Page();
     }
@@ -93,7 +88,7 @@ public class IndexModel(AppStateStore store) : PageModel
             store.Config.PropertyMappings.RemoveAt(index);
         }
 
-        await store.SaveConfigAndRefreshAsync(NormalizeMonth(SelectedMonth), cancellationToken);
+        await store.SaveConfigAndRefreshAsync(selectedMonth: null, cancellationToken);
         LoadFromState();
         return Page();
     }
@@ -103,7 +98,7 @@ public class IndexModel(AppStateStore store) : PageModel
         await store.InitializeAsync(cancellationToken);
         ApplyToState();
         store.Config.MonthlyPrices.Add(new MonthlyPrice());
-        await store.SaveConfigAndRefreshAsync(NormalizeMonth(SelectedMonth), cancellationToken);
+        await store.SaveConfigAndRefreshAsync(selectedMonth: null, cancellationToken);
         LoadFromState();
         return Page();
     }
@@ -117,14 +112,9 @@ public class IndexModel(AppStateStore store) : PageModel
             store.Config.MonthlyPrices.RemoveAt(index);
         }
 
-        await store.SaveConfigAndRefreshAsync(NormalizeMonth(SelectedMonth), cancellationToken);
+        await store.SaveConfigAndRefreshAsync(selectedMonth: null, cancellationToken);
         LoadFromState();
         return Page();
-    }
-
-    private static string? NormalizeMonth(string value)
-    {
-        return string.Equals(value, "Alle", StringComparison.OrdinalIgnoreCase) ? null : value;
     }
 
     private void ApplyToState()
@@ -167,9 +157,5 @@ public class IndexModel(AppStateStore store) : PageModel
             FeedInTariffPerKwh = x.FeedInTariffPerKwh
         }).ToList();
 
-        if (string.IsNullOrWhiteSpace(SelectedMonth))
-        {
-            SelectedMonth = "Alle";
-        }
     }
 }
