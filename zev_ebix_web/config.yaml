@@ -1,5 +1,5 @@
 name: ZEV Ebix Web
-version: "0.1.0"
+version: "0.1.1"
 slug: zev_ebix_web
 description: ZEV Abrechnung als Weboberfläche (CSV/XML + Dropbox Link)
 url: "https://github.com/JordiDaniel/SwissEnergyBillingCalculator"
