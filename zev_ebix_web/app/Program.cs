@@ -5,7 +5,7 @@ using ZevEbixWeb.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 var internalPort = ReadPort("ZEV_INTERNAL_PORT", 8080);
-var publicPort = ReadPort("ZEV_PUBLIC_PORT", 8081);
+var publicPort = ReadPort("ZEV_PUBLIC_PORT", 8082);
 
 builder.WebHost.ConfigureKestrel(options =>
 {

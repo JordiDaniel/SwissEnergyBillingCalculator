@@ -1,5 +1,5 @@
 name: ZEV Ebix Web
-version: "0.1.1"
+version: "0.2.0"
 slug: zev_ebix_web
 description: ZEV Abrechnung als Weboberfläche (CSV/XML + Dropbox Link)
 url: "https://github.com/JordiDaniel/SwissEnergyBillingCalculator"
@@ -17,9 +17,9 @@ panel_title: ZEV Abrechnung
 hassio_api: false
 homeassistant_api: false
 ports:
-  8081/tcp: 8081
+  8082/tcp: 8082
 ports_description:
-  8081/tcp: Öffentliche Strom-Ansicht (/strom)
+  8082/tcp: Öffentliche Strom-Ansicht (/strom)
 options:
   public_username: ""
   public_password: ""
