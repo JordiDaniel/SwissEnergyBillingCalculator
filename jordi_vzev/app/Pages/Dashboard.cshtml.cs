@@ -9,7 +9,7 @@ using ZevEbixWeb.Services;
 namespace ZevEbixWeb.Pages;
 
 [Authorize]
-public class DashboardModel(AppStateStore store, BillingEngine engine) : PageModel
+public class DashboardModel(AppStateStore store, BillingEngine engine, HomeAssistantEntityService haEntityService) : PageModel
 {
     [BindProperty(SupportsGet = true, Name = "range")]
     public string Range { get; set; } = "7days";
@@ -21,6 +21,9 @@ public class DashboardModel(AppStateStore store, BillingEngine engine) : PageMod
     public string? To { get; set; }
 
     public string PropertyName { get; private set; } = string.Empty;
+    public string CurrentProductionEntityId { get; private set; } = string.Empty;
+    public string? CurrentProductionLiveValue { get; private set; }
+    public string? CurrentProductionUnit { get; private set; }
     public string? ErrorMessage { get; private set; }
     public List<SummaryRow> MonthRows { get; private set; } = [];
     public List<PropertyDailyConsumptionPoint> DailyPoints { get; private set; } = [];
@@ -41,6 +44,16 @@ public class DashboardModel(AppStateStore store, BillingEngine engine) : PageMod
 
         await store.InitializeAsync(cancellationToken);
         await store.SaveConfigAndRefreshAsync(selectedMonth: null, cancellationToken);
+
+        var mapping = store.Config.PropertyMappings.FirstOrDefault(x => string.Equals(x.PropertyName, PropertyName, StringComparison.OrdinalIgnoreCase));
+        CurrentProductionEntityId = mapping?.CurrentProductionEntityId ?? string.Empty;
+
+        if (!string.IsNullOrWhiteSpace(CurrentProductionEntityId))
+        {
+            var live = await haEntityService.GetEntityStateAsync(CurrentProductionEntityId, cancellationToken);
+            CurrentProductionLiveValue = live?.State;
+            CurrentProductionUnit = live?.UnitOfMeasurement;
+        }
 
         MonthRows = engine.BuildSummary(store.Config, store.MeterReadings, selectedMonth: null)
             .Where(x => string.Equals(x.PropertyName, PropertyName, StringComparison.OrdinalIgnoreCase))

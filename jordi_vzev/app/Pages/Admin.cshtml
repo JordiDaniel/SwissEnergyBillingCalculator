@@ -34,11 +34,23 @@
         </div>
         <div class="col-md-3">
             <label class="form-label">ZEV Bezug-Zähler</label>
-            <input class="form-control" name="ZevImportMeterId" value="@Model.ZevImportMeterId" />
+            <select class="form-select" name="ZevImportMeterId">
+                <option value=""></option>
+                @foreach (var meter in Model.AvailableMeters)
+                {
+                    <option value="@meter" selected="@(string.Equals(meter, Model.ZevImportMeterId, StringComparison.OrdinalIgnoreCase))">@meter</option>
+                }
+            </select>
         </div>
         <div class="col-md-3">
             <label class="form-label">ZEV Rücklieferung-Zähler</label>
-            <input class="form-control" name="ZevExportMeterId" value="@Model.ZevExportMeterId" />
+            <select class="form-select" name="ZevExportMeterId">
+                <option value=""></option>
+                @foreach (var meter in Model.AvailableMeters)
+                {
+                    <option value="@meter" selected="@(string.Equals(meter, Model.ZevExportMeterId, StringComparison.OrdinalIgnoreCase))">@meter</option>
+                }
+            </select>
         </div>
     </div>
 
@@ -49,6 +61,7 @@
             <th>Name</th>
             <th>Netz-Zähler</th>
             <th>PV-Zähler</th>
+            <th>HA Entität Produktion</th>
             <th>Priorität</th>
             <th></th>
         </tr>
@@ -58,8 +71,25 @@
         {
             <tr>
                 <td><input class="form-control" name="PropertyMappings[@i].PropertyName" value="@Model.PropertyMappings[i].PropertyName" /></td>
-                <td><input class="form-control" name="PropertyMappings[@i].GridMeterId" value="@Model.PropertyMappings[i].GridMeterId" /></td>
-                <td><input class="form-control" name="PropertyMappings[@i].PvMeterId" value="@Model.PropertyMappings[i].PvMeterId" /></td>
+                <td>
+                    <select class="form-select" name="PropertyMappings[@i].GridMeterId">
+                        <option value=""></option>
+                        @foreach (var meter in Model.AvailableMeters)
+                        {
+                            <option value="@meter" selected="@(string.Equals(meter, Model.PropertyMappings[i].GridMeterId, StringComparison.OrdinalIgnoreCase))">@meter</option>
+                        }
+                    </select>
+                </td>
+                <td>
+                    <select class="form-select" name="PropertyMappings[@i].PvMeterId">
+                        <option value=""></option>
+                        @foreach (var meter in Model.AvailableMeters)
+                        {
+                            <option value="@meter" selected="@(string.Equals(meter, Model.PropertyMappings[i].PvMeterId, StringComparison.OrdinalIgnoreCase))">@meter</option>
+                        }
+                    </select>
+                </td>
+                <td><input class="form-control" name="PropertyMappings[@i].CurrentProductionEntityId" value="@Model.PropertyMappings[i].CurrentProductionEntityId" placeholder="sensor.active_power" /></td>
                 <td><input class="form-control" name="PropertyMappings[@i].PvPriority" value="@Model.PropertyMappings[i].PvPriority" /></td>
                 <td>
                     <button class="btn btn-outline-danger btn-sm" type="submit" name="removePropertyIndex" value="@i">X</button>

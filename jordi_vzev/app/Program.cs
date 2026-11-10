@@ -33,6 +33,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddSingleton<BillingEngine>();
 builder.Services.AddSingleton<AppStateStore>();
 builder.Services.AddSingleton<UserAccessService>();
+builder.Services.AddSingleton<HomeAssistantEntityService>();
 
 var app = builder.Build();
 

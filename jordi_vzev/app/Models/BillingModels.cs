@@ -5,6 +5,7 @@ public sealed class PropertyMapping
     public string PropertyName { get; set; } = string.Empty;
     public string GridMeterId { get; set; } = string.Empty;
     public string PvMeterId { get; set; } = string.Empty;
+    public string CurrentProductionEntityId { get; set; } = string.Empty;
     public int PvPriority { get; set; }
 }
 

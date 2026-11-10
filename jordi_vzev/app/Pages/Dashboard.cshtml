@@ -110,6 +110,8 @@
     <div class="card-body">
         <h5 class="card-title">Aktuelle Einspeisung</h5>
         <p class="mb-1"><strong>Liegenschaft:</strong> @Model.PropertyName</p>
-        <p class="mb-0">Aktuelle Einspeisung wird über die konfigurierte Home-Assistant Entität angezeigt (optional erweiterbar).</p>
+        <p class="mb-1"><strong>Konfigurierte HA Entität:</strong> @(string.IsNullOrWhiteSpace(Model.CurrentProductionEntityId) ? "Nicht gesetzt" : Model.CurrentProductionEntityId)</p>
+        <p class="mb-1"><strong>Livewert:</strong> @(string.IsNullOrWhiteSpace(Model.CurrentProductionLiveValue) ? "Nicht verfügbar" : $"{Model.CurrentProductionLiveValue} {Model.CurrentProductionUnit}".Trim())</p>
+        <p class="mb-0">Die Entität kann im Admin pro Liegenschaft gepflegt werden (z. B. sensor.active_power).</p>
     </div>
 </div>

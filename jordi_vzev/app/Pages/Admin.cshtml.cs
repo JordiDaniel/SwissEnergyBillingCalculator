@@ -12,6 +12,8 @@ public class AdminModel(AppStateStore store) : PageModel
     [BindProperty]
     public string DataSource { get; set; } = string.Empty;
 
+    public List<string> AvailableMeters { get; private set; } = [];
+
     [BindProperty]
     public string PvDistributionMode { get; set; } = BillingEngine.PvDistributionModeFair;
 
@@ -32,6 +34,11 @@ public class AdminModel(AppStateStore store) : PageModel
     public async Task OnGetAsync(CancellationToken cancellationToken)
     {
         await store.InitializeAsync(cancellationToken);
+        if (!string.IsNullOrWhiteSpace(store.Config.DataFolderPath))
+        {
+            await store.LoadDataAsync(store.Config.DataFolderPath, selectedMonth: null, cancellationToken);
+        }
+
         LoadFromState();
     }
 
@@ -76,6 +83,11 @@ public class AdminModel(AppStateStore store) : PageModel
                 break;
         }
 
+        if (!string.IsNullOrWhiteSpace(store.Config.DataFolderPath))
+        {
+            await store.LoadDataAsync(store.Config.DataFolderPath, selectedMonth: null, cancellationToken);
+        }
+
         await store.SaveConfigAndRefreshAsync(selectedMonth: null, cancellationToken);
         LoadFromState();
         return Page();
@@ -105,12 +117,14 @@ public class AdminModel(AppStateStore store) : PageModel
         PvDistributionMode = store.Config.PvDistributionMode;
         ZevImportMeterId = store.Config.ZevImportMeterId;
         ZevExportMeterId = store.Config.ZevExportMeterId;
+        AvailableMeters = store.AvailableMeters;
 
         PropertyMappings = store.Config.PropertyMappings.Select(x => new PropertyMapping
         {
             PropertyName = x.PropertyName,
             GridMeterId = x.GridMeterId,
             PvMeterId = x.PvMeterId,
+            CurrentProductionEntityId = x.CurrentProductionEntityId,
             PvPriority = x.PvPriority
         }).ToList();
 

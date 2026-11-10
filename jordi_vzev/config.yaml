@@ -1,5 +1,5 @@
 name: Jordi.vzev
-version: "0.1.1"
+version: "0.1.2"
 slug: jordi_vzev
 description: Jordi.vzev Home Assistant Add-on (rollenbasiert)
 url: "https://github.com/JordiDaniel/SwissEnergyBillingCalculator"
@@ -14,7 +14,7 @@ ingress: false
 panel_icon: mdi:flash
 panel_title: Jordi.vzev
 hassio_api: false
-homeassistant_api: false
+homeassistant_api: true
 ports:
   8082/tcp: 8082
 ports_description:

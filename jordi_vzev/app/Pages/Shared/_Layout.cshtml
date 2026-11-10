@@ -9,7 +9,35 @@
     <link rel="stylesheet" href="~/Jordi.vzev.styles.css" asp-append-version="true" />
 </head>
 <body>
-<div class="container py-3">
+<header class="border-bottom mb-3">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Jordi.vzev</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Navigation umschalten">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        if (User.IsInRole("admin"))
+                        {
+                            <li class="nav-item"><a class="nav-link" href="/Admin">Admin</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/Dashboard">Dashboard</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/Public">Stromansicht</a></li>
+                        }
+                        else
+                        {
+                            <li class="nav-item"><a class="nav-link" href="/Dashboard">Dashboard</a></li>
+                        }
+                    }
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<div class="container py-2">
     @RenderBody()
 </div>
 
