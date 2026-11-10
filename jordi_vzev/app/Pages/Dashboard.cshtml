@@ -1,0 +1,115 @@
+@page
+@model ZevEbixWeb.Pages.DashboardModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 mb-0">Liegenschaft Dashboard</h2>
+    <form method="post" asp-page="/Logout">
+        @Html.AntiForgeryToken()
+        <button class="btn btn-outline-secondary btn-sm" type="submit">Abmelden</button>
+    </form>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-warning">@Model.ErrorMessage</div>
+}
+
+@if (Model.MonthRows.Count > 0)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Monatsübersicht</h5>
+            <div class="table-responsive">
+                <table class="table table-sm table-striped">
+                    <thead>
+                    <tr>
+                        <th>Monat</th>
+                        <th>Verbrauch (kWh)</th>
+                        <th>Netz (kWh)</th>
+                        <th>PV Bezug (kWh)</th>
+                        <th>PV Produktion (kWh)</th>
+                        <th>Kosten (CHF)</th>
+                        <th>Ersparnis PV (CHF)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var row in Model.MonthRows)
+                    {
+                        <tr>
+                            <td>@row.MonthLabel</td>
+                            <td>@row.TotalKwh.ToString("N3")</td>
+                            <td>@row.GridKwh.ToString("N3")</td>
+                            <td>@row.PvKwh.ToString("N3")</td>
+                            <td>@row.FeedInKwh.ToString("N3")</td>
+                            <td>@row.TotalCost.ToString("N2")</td>
+                            <td>@row.SavedByNeighborPv.ToString("N2")</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">Tagesverbrauch (Netz/PV)</h5>
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-md-3">
+                <label class="form-label">Filter</label>
+                <select class="form-select" name="range" onchange="this.form.submit()">
+                    <option value="today" selected="@(Model.Range == "today")">Aktueller Tag</option>
+                    <option value="7days" selected="@(Model.Range == "7days")">Letzte 7 Tage</option>
+                    <option value="custom" selected="@(Model.Range == "custom")">Zeitraum</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Von</label>
+                <input class="form-control" type="date" name="from" value="@Model.From" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Bis</label>
+                <input class="form-control" type="date" name="to" value="@Model.To" />
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button class="btn btn-primary w-100" type="submit">Anzeigen</button>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead>
+                <tr>
+                    <th>Datum</th>
+                    <th class="text-end">Netz kWh</th>
+                    <th class="text-end">PV kWh</th>
+                    <th class="text-end">Total kWh</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var point in Model.DailyPoints)
+                {
+                    <tr>
+                        <td>@point.Date.ToString("dd.MM.yyyy")</td>
+                        <td class="text-end">@point.GridKwh.ToString("N3")</td>
+                        <td class="text-end">@point.PvKwh.ToString("N3")</td>
+                        <td class="text-end">@point.TotalKwh.ToString("N3")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Aktuelle Einspeisung</h5>
+        <p class="mb-1"><strong>Liegenschaft:</strong> @Model.PropertyName</p>
+        <p class="mb-0">Aktuelle Einspeisung wird über die konfigurierte Home-Assistant Entität angezeigt (optional erweiterbar).</p>
+    </div>
+</div>

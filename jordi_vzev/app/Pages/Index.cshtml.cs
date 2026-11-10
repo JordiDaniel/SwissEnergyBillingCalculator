@@ -35,6 +35,28 @@ public class IndexModel(AppStateStore store) : PageModel
         LoadFromState();
     }
 
+    public Task<IActionResult> OnPostAsync(string? command, int? removePropertyIndex, int? removePriceIndex, CancellationToken cancellationToken)
+    {
+        if (removePropertyIndex.HasValue)
+        {
+            return OnPostRemovePropertyAsync(removePropertyIndex.Value, cancellationToken);
+        }
+
+        if (removePriceIndex.HasValue)
+        {
+            return OnPostRemovePriceAsync(removePriceIndex.Value, cancellationToken);
+        }
+
+        return (command ?? string.Empty).ToLowerInvariant() switch
+        {
+            "loaddata" => OnPostLoadDataAsync(cancellationToken),
+            "addproperty" => OnPostAddPropertyAsync(cancellationToken),
+            "addprice" => OnPostAddPriceAsync(cancellationToken),
+            "saveconfig" => OnPostSaveConfigAsync(cancellationToken),
+            _ => OnPostSaveConfigAsync(cancellationToken)
+        };
+    }
+
     public async Task<IActionResult> OnPostLoadDataAsync(CancellationToken cancellationToken)
     {
         await store.InitializeAsync(cancellationToken);

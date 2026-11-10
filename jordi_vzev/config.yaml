@@ -1,0 +1,29 @@
+name: Jordi.vzev
+version: "0.1.0"
+slug: jordi_vzev
+description: Jordi.vzev Home Assistant Add-on (rollenbasiert)
+url: "https://github.com/JordiDaniel/SwissEnergyBillingCalculator"
+arch:
+  - aarch64
+  - armv7
+  - amd64
+startup: application
+boot: auto
+init: false
+ingress: false
+panel_icon: mdi:flash
+panel_title: Jordi.vzev
+hassio_api: false
+homeassistant_api: false
+ports:
+  8082/tcp: 8082
+ports_description:
+  8082/tcp: Jordi.vzev Web App
+options:
+  users: []
+schema:
+  users:
+    - username: str
+      password: password
+      role: list(admin|property_user)
+      property: str?

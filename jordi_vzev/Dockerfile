@@ -3,20 +3,18 @@ FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY app/ ./
-RUN dotnet restore ZevEbixWeb.csproj
-RUN dotnet publish ZevEbixWeb.csproj -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet restore Jordi.vzev.csproj
+RUN dotnet publish Jordi.vzev.csproj -c Release -o /app/publish /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
-ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_URLS=http://+:8082
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ZEVEBIX_DATA_DIR=/data
-ENV ZEV_INTERNAL_PORT=8080
-ENV ZEV_PUBLIC_PORT=8082
+ENV JORDI_VZEV_PORT=8082
 
 COPY --from=build /app/publish ./
 
-EXPOSE 8080
 EXPOSE 8082
-ENTRYPOINT ["dotnet", "ZevEbixWeb.dll"]
+ENTRYPOINT ["dotnet", "Jordi.vzev.dll"]

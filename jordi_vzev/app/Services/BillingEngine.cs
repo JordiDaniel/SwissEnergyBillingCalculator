@@ -154,6 +154,73 @@ public sealed class BillingEngine(IHttpClientFactory httpClientFactory)
         };
     }
 
+    public PropertyDailyConsumptionView? BuildDailyConsumption(
+        AppConfig config,
+        IReadOnlyCollection<MeterReading> readings,
+        string propertyName,
+        DateOnly? fromDate,
+        DateOnly? toDate)
+    {
+        if (string.IsNullOrWhiteSpace(propertyName))
+        {
+            return null;
+        }
+
+        var mapping = config.PropertyMappings.FirstOrDefault(x =>
+            string.Equals(x.PropertyName, propertyName, StringComparison.OrdinalIgnoreCase)
+            && !string.IsNullOrWhiteSpace(x.GridMeterId));
+
+        if (mapping is null)
+        {
+            return null;
+        }
+
+        var from = fromDate ?? DateOnly.FromDateTime(DateTime.Today.AddDays(-6));
+        var to = toDate ?? DateOnly.FromDateTime(DateTime.Today);
+        if (from > to)
+        {
+            (from, to) = (to, from);
+        }
+
+        var gridByDay = readings
+            .Where(x => string.Equals(x.MeterId, mapping.GridMeterId, StringComparison.OrdinalIgnoreCase))
+            .Where(x => DateOnly.FromDateTime(x.PeriodStart) >= from && DateOnly.FromDateTime(x.PeriodStart) <= to)
+            .GroupBy(x => DateOnly.FromDateTime(x.PeriodStart))
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Kwh));
+
+        var pvByDay = string.IsNullOrWhiteSpace(mapping.PvMeterId)
+            ? new Dictionary<DateOnly, decimal>()
+            : readings
+                .Where(x => string.Equals(x.MeterId, mapping.PvMeterId, StringComparison.OrdinalIgnoreCase))
+                .Where(x => DateOnly.FromDateTime(x.PeriodStart) >= from && DateOnly.FromDateTime(x.PeriodStart) <= to)
+                .GroupBy(x => DateOnly.FromDateTime(x.PeriodStart))
+                .ToDictionary(g => g.Key, g => g.Sum(x => x.Kwh));
+
+        var days = Enumerable.Range(0, to.DayNumber - from.DayNumber + 1)
+            .Select(offset => from.AddDays(offset));
+
+        var points = days
+            .Select(day =>
+            {
+                var grid = gridByDay.TryGetValue(day, out var g) ? g : 0m;
+                var pv = pvByDay.TryGetValue(day, out var p) ? p : 0m;
+                return new PropertyDailyConsumptionPoint
+                {
+                    Date = day,
+                    GridKwh = grid,
+                    PvKwh = pv,
+                    TotalKwh = grid + pv
+                };
+            })
+            .ToList();
+
+        return new PropertyDailyConsumptionView
+        {
+            PropertyName = mapping.PropertyName,
+            Points = points
+        };
+    }
+
     public List<SummaryRow> BuildSummary(AppConfig config, IReadOnlyCollection<MeterReading> readings, string? selectedMonth)
     {
         if (config.PropertyMappings.Count == 0 || readings.Count == 0)

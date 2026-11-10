@@ -63,6 +63,20 @@ public sealed class PropertyHourlyConsumptionView
     public List<PropertyHourlyConsumptionRow> Hours { get; init; } = [];
 }
 
+public sealed class PropertyDailyConsumptionPoint
+{
+    public DateOnly Date { get; init; }
+    public decimal TotalKwh { get; init; }
+    public decimal GridKwh { get; init; }
+    public decimal PvKwh { get; init; }
+}
+
+public sealed class PropertyDailyConsumptionView
+{
+    public string PropertyName { get; init; } = string.Empty;
+    public List<PropertyDailyConsumptionPoint> Points { get; init; } = [];
+}
+
 public sealed class BillingLoadResult
 {
     public required List<MeterReading> Readings { get; init; }

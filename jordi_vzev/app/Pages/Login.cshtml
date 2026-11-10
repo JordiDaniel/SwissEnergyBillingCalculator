@@ -1,0 +1,33 @@
+@page
+@model ZevEbixWeb.Pages.LoginModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-12 col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h1 class="h4 mb-3">Jordi.vzev Login</h1>
+
+                @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+                {
+                    <div class="alert alert-danger">@Model.ErrorMessage</div>
+                }
+
+                <form method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label class="form-label" for="username">Benutzername</label>
+                        <input id="username" name="Username" value="@Model.Username" class="form-control" autocomplete="username" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="password">Passwort</label>
+                        <input id="password" name="Password" type="password" class="form-control" autocomplete="current-password" />
+                    </div>
+                    <button class="btn btn-primary w-100" type="submit">Anmelden</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
