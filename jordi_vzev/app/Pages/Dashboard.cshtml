@@ -59,6 +59,18 @@
     <div class="card-body">
         <h5 class="card-title">Tagesverbrauch (Netz/PV)</h5>
         <form method="get" class="row g-2 mb-3">
+            @if (User.IsInRole("admin"))
+            {
+                <div class="col-md-3">
+                    <label class="form-label">Liegenschaft</label>
+                    <select class="form-select" name="property">
+                        @foreach (var property in Model.AvailableProperties)
+                        {
+                            <option value="@property" selected="@(string.Equals(property, Model.PropertyName, StringComparison.OrdinalIgnoreCase))">@property</option>
+                        }
+                    </select>
+                </div>
+            }
             <div class="col-md-3">
                 <label class="form-label">Filter</label>
                 <select class="form-select" name="range" onchange="this.form.submit()">
@@ -106,12 +118,46 @@
     </div>
 </div>
 
-<div class="card">
+<div class="card mb-3">
     <div class="card-body">
         <h5 class="card-title">Aktuelle Einspeisung</h5>
         <p class="mb-1"><strong>Liegenschaft:</strong> @Model.PropertyName</p>
         <p class="mb-1"><strong>Konfigurierte HA Entität:</strong> @(string.IsNullOrWhiteSpace(Model.CurrentProductionEntityId) ? "Nicht gesetzt" : Model.CurrentProductionEntityId)</p>
         <p class="mb-1"><strong>Livewert:</strong> @(string.IsNullOrWhiteSpace(Model.CurrentProductionLiveValue) ? "Nicht verfügbar" : $"{Model.CurrentProductionLiveValue} {Model.CurrentProductionUnit}".Trim())</p>
         <p class="mb-0">Die Entität kann im Admin pro Liegenschaft gepflegt werden (z. B. sensor.active_power).</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">PV Produktion aller Liegenschaften (Live)</h5>
+        @if (Model.AllPropertyProductionRows.Count == 0)
+        {
+            <div class="text-muted">Keine Liegenschaft mit konfigurierter HA-Entität gefunden.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm table-striped mb-0">
+                    <thead>
+                    <tr>
+                        <th>Liegenschaft</th>
+                        <th>HA Entität</th>
+                        <th class="text-end">Livewert</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var row in Model.AllPropertyProductionRows)
+                    {
+                        <tr>
+                            <td>@row.PropertyName</td>
+                            <td>@row.EntityId</td>
+                            <td class="text-end">@(string.IsNullOrWhiteSpace(row.LiveValue) ? "Nicht verfügbar" : $"{row.LiveValue} {row.Unit}".Trim())</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
     </div>
 </div>

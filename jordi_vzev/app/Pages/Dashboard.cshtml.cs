@@ -11,6 +11,9 @@ namespace ZevEbixWeb.Pages;
 [Authorize]
 public class DashboardModel(AppStateStore store, BillingEngine engine, HomeAssistantEntityService haEntityService) : PageModel
 {
+    [BindProperty(SupportsGet = true, Name = "property")]
+    public string? SelectedProperty { get; set; }
+
     [BindProperty(SupportsGet = true, Name = "range")]
     public string Range { get; set; } = "7days";
 
@@ -21,31 +24,43 @@ public class DashboardModel(AppStateStore store, BillingEngine engine, HomeAssis
     public string? To { get; set; }
 
     public string PropertyName { get; private set; } = string.Empty;
+    public List<string> AvailableProperties { get; private set; } = [];
     public string CurrentProductionEntityId { get; private set; } = string.Empty;
     public string? CurrentProductionLiveValue { get; private set; }
     public string? CurrentProductionUnit { get; private set; }
     public string? ErrorMessage { get; private set; }
     public List<SummaryRow> MonthRows { get; private set; } = [];
     public List<PropertyDailyConsumptionPoint> DailyPoints { get; private set; } = [];
+    public List<PropertyProductionLiveRow> AllPropertyProductionRows { get; private set; } = [];
 
     public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
     {
-        if (User.IsInRole(UserAccessService.AdminRole))
-        {
-            return RedirectToPage("/Admin");
-        }
-
-        PropertyName = User.FindFirstValue("property") ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(PropertyName))
-        {
-            ErrorMessage = "Für diesen Benutzer ist keine Liegenschaft hinterlegt.";
-            return Page();
-        }
-
         try
         {
             await store.InitializeAsync(cancellationToken);
             await store.SaveConfigAndRefreshAsync(selectedMonth: null, cancellationToken);
+
+            AvailableProperties = engine.GetAvailableProperties(store.Config);
+            if (User.IsInRole(UserAccessService.AdminRole))
+            {
+                if (string.IsNullOrWhiteSpace(SelectedProperty)
+                    || !AvailableProperties.Contains(SelectedProperty, StringComparer.OrdinalIgnoreCase))
+                {
+                    SelectedProperty = AvailableProperties.FirstOrDefault();
+                }
+
+                PropertyName = SelectedProperty ?? string.Empty;
+            }
+            else
+            {
+                PropertyName = User.FindFirstValue("property") ?? string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(PropertyName))
+            {
+                ErrorMessage = "Für diesen Benutzer ist keine Liegenschaft hinterlegt.";
+                return Page();
+            }
 
             var mapping = store.Config.PropertyMappings.FirstOrDefault(x => string.Equals(x.PropertyName, PropertyName, StringComparison.OrdinalIgnoreCase));
             CurrentProductionEntityId = mapping?.CurrentProductionEntityId ?? string.Empty;
@@ -55,6 +70,23 @@ public class DashboardModel(AppStateStore store, BillingEngine engine, HomeAssis
                 var live = await haEntityService.GetEntityStateAsync(CurrentProductionEntityId, cancellationToken);
                 CurrentProductionLiveValue = live?.State;
                 CurrentProductionUnit = live?.UnitOfMeasurement;
+            }
+
+            var mappingsWithEntity = store.Config.PropertyMappings
+                .Where(x => !string.IsNullOrWhiteSpace(x.PropertyName) && !string.IsNullOrWhiteSpace(x.CurrentProductionEntityId))
+                .OrderBy(x => x.PropertyName, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            foreach (var rowMapping in mappingsWithEntity)
+            {
+                var live = await haEntityService.GetEntityStateAsync(rowMapping.CurrentProductionEntityId, cancellationToken);
+                AllPropertyProductionRows.Add(new PropertyProductionLiveRow
+                {
+                    PropertyName = rowMapping.PropertyName,
+                    EntityId = rowMapping.CurrentProductionEntityId,
+                    LiveValue = live?.State,
+                    Unit = live?.UnitOfMeasurement
+                });
             }
 
             MonthRows = engine.BuildSummary(store.Config, store.MeterReadings, selectedMonth: null)
@@ -95,4 +127,12 @@ public class DashboardModel(AppStateStore store, BillingEngine engine, HomeAssis
 
         return (today.AddDays(-6), today);
     }
+}
+
+public sealed class PropertyProductionLiveRow
+{
+    public string PropertyName { get; init; } = string.Empty;
+    public string EntityId { get; init; } = string.Empty;
+    public string? LiveValue { get; init; }
+    public string? Unit { get; init; }
 }
