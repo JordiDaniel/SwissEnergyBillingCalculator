@@ -1,0 +1,7 @@
+D:\git\Jordi.EbixAbrechnung\jordi_vzev\app\out\appsettings.Development.json
+D:\git\Jordi.EbixAbrechnung\jordi_vzev\app\out\appsettings.json
+D:\git\Jordi.EbixAbrechnung\jordi_vzev\app\out\data\zev-config-web.json
+D:\git\Jordi.EbixAbrechnung\jordi_vzev\app\out\Jordi.vzev.dll
+D:\git\Jordi.EbixAbrechnung\jordi_vzev\app\out\Jordi.vzev.deps.json
+D:\git\Jordi.EbixAbrechnung\jordi_vzev\app\out\Jordi.vzev.runtimeconfig.json
+D:\git\Jordi.EbixAbrechnung\jordi_vzev\app\out\Jordi.vzev.pdb
