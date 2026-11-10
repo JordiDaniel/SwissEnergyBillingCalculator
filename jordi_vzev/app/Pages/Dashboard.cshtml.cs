@@ -42,29 +42,36 @@ public class DashboardModel(AppStateStore store, BillingEngine engine, HomeAssis
             return Page();
         }
 
-        await store.InitializeAsync(cancellationToken);
-        await store.SaveConfigAndRefreshAsync(selectedMonth: null, cancellationToken);
-
-        var mapping = store.Config.PropertyMappings.FirstOrDefault(x => string.Equals(x.PropertyName, PropertyName, StringComparison.OrdinalIgnoreCase));
-        CurrentProductionEntityId = mapping?.CurrentProductionEntityId ?? string.Empty;
-
-        if (!string.IsNullOrWhiteSpace(CurrentProductionEntityId))
+        try
         {
-            var live = await haEntityService.GetEntityStateAsync(CurrentProductionEntityId, cancellationToken);
-            CurrentProductionLiveValue = live?.State;
-            CurrentProductionUnit = live?.UnitOfMeasurement;
+            await store.InitializeAsync(cancellationToken);
+            await store.SaveConfigAndRefreshAsync(selectedMonth: null, cancellationToken);
+
+            var mapping = store.Config.PropertyMappings.FirstOrDefault(x => string.Equals(x.PropertyName, PropertyName, StringComparison.OrdinalIgnoreCase));
+            CurrentProductionEntityId = mapping?.CurrentProductionEntityId ?? string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(CurrentProductionEntityId))
+            {
+                var live = await haEntityService.GetEntityStateAsync(CurrentProductionEntityId, cancellationToken);
+                CurrentProductionLiveValue = live?.State;
+                CurrentProductionUnit = live?.UnitOfMeasurement;
+            }
+
+            MonthRows = engine.BuildSummary(store.Config, store.MeterReadings, selectedMonth: null)
+                .Where(x => string.Equals(x.PropertyName, PropertyName, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(x => x.MonthLabel)
+                .ToList();
+
+            var (fromDate, toDate) = ResolveRange();
+            var daily = engine.BuildDailyConsumption(store.Config, store.MeterReadings, PropertyName, fromDate, toDate);
+            if (daily is not null)
+            {
+                DailyPoints = daily.Points;
+            }
         }
-
-        MonthRows = engine.BuildSummary(store.Config, store.MeterReadings, selectedMonth: null)
-            .Where(x => string.Equals(x.PropertyName, PropertyName, StringComparison.OrdinalIgnoreCase))
-            .OrderByDescending(x => x.MonthLabel)
-            .ToList();
-
-        var (fromDate, toDate) = ResolveRange();
-        var daily = engine.BuildDailyConsumption(store.Config, store.MeterReadings, PropertyName, fromDate, toDate);
-        if (daily is not null)
+        catch (Exception ex)
         {
-            DailyPoints = daily.Points;
+            ErrorMessage = $"Daten konnten nicht geladen werden: {ex.Message}";
         }
 
         return Page();

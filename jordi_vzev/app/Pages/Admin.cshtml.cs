@@ -34,9 +34,17 @@ public class AdminModel(AppStateStore store) : PageModel
     public async Task OnGetAsync(CancellationToken cancellationToken)
     {
         await store.InitializeAsync(cancellationToken);
-        if (!string.IsNullOrWhiteSpace(store.Config.DataFolderPath))
+
+        try
         {
-            await store.LoadDataAsync(store.Config.DataFolderPath, selectedMonth: null, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(store.Config.DataFolderPath))
+            {
+                await store.LoadDataAsync(store.Config.DataFolderPath, selectedMonth: null, cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = $"Daten konnten nicht geladen werden: {ex.Message}";
         }
 
         LoadFromState();
@@ -83,12 +91,20 @@ public class AdminModel(AppStateStore store) : PageModel
                 break;
         }
 
-        if (!string.IsNullOrWhiteSpace(store.Config.DataFolderPath))
+        try
         {
-            await store.LoadDataAsync(store.Config.DataFolderPath, selectedMonth: null, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(store.Config.DataFolderPath))
+            {
+                await store.LoadDataAsync(store.Config.DataFolderPath, selectedMonth: null, cancellationToken);
+            }
+
+            await store.SaveConfigAndRefreshAsync(selectedMonth: null, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Message = $"Verarbeitung fehlgeschlagen: {ex.Message}";
         }
 
-        await store.SaveConfigAndRefreshAsync(selectedMonth: null, cancellationToken);
         LoadFromState();
         return Page();
     }
