@@ -9,6 +9,7 @@ public sealed class HomeAssistantEntityService(
 {
     private const string HomeAssistantUrlEnv = "HA_URL";
     private const string HomeAssistantTokenEnv = "HA_TOKEN";
+    private const string OptionsPath = "/data/options.json";
 
     public async Task<HomeAssistantEntityState?> GetEntityStateAsync(
         string entityId,
@@ -20,20 +21,19 @@ public sealed class HomeAssistantEntityService(
             return null;
         }
 
-        var token = Environment.GetEnvironmentVariable(HomeAssistantTokenEnv);
+        var (baseUrl, token) = LoadHomeAssistantOptions();
 
         if (string.IsNullOrWhiteSpace(token))
         {
-            logger.LogError(
-                "Environment variable {Variable} is missing.",
-                HomeAssistantTokenEnv);
-
+            logger.LogError("ha_token is missing in /data/options.json (or HA_TOKEN env fallback).");
             return null;
         }
 
-        var baseUrl =
-            Environment.GetEnvironmentVariable(HomeAssistantUrlEnv)
-            ?? "http://192.168.178.60:8123";
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            logger.LogError("ha_url is missing in /data/options.json (or HA_URL env fallback).");
+            return null;
+        }
 
         logger.LogInformation(
             "Reading Home Assistant entity {EntityId} from {BaseUrl}",
@@ -131,6 +131,40 @@ public sealed class HomeAssistantEntityService(
         {
             logger.LogError(ex, "Unexpected error while reading entity {EntityId}",entityId);
             return null;
+        }
+    }
+
+    private (string BaseUrl, string Token) LoadHomeAssistantOptions()
+    {
+        var envUrl = Environment.GetEnvironmentVariable(HomeAssistantUrlEnv)?.Trim() ?? string.Empty;
+        var envToken = Environment.GetEnvironmentVariable(HomeAssistantTokenEnv)?.Trim() ?? string.Empty;
+
+        if (!File.Exists(OptionsPath))
+        {
+            return (envUrl, envToken);
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(File.ReadAllText(OptionsPath));
+
+            var fileUrl = doc.RootElement.TryGetProperty("ha_url", out var haUrlProp)
+                ? (haUrlProp.GetString() ?? string.Empty).Trim()
+                : string.Empty;
+
+            var fileToken = doc.RootElement.TryGetProperty("ha_token", out var haTokenProp)
+                ? (haTokenProp.GetString() ?? string.Empty).Trim()
+                : string.Empty;
+
+            var resolvedUrl = string.IsNullOrWhiteSpace(fileUrl) ? envUrl : fileUrl;
+            var resolvedToken = string.IsNullOrWhiteSpace(fileToken) ? envToken : fileToken;
+
+            return (resolvedUrl, resolvedToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to parse /data/options.json for ha_url/ha_token.");
+            return (envUrl, envToken);
         }
     }
 }
