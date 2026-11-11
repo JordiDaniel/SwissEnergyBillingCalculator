@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\git\\Jordi.EbixAbrechnung\\jordi_vzev\\app\\Jordi.vzev.csproj",
+      "projectUniqueName": "D:\\git\\Jordi.EbixAbrechnung\\Jordi.vzev\\Jordi.vzev.csproj",
       "projectName": "Jordi.vzev",
-      "projectPath": "D:\\git\\Jordi.EbixAbrechnung\\jordi_vzev\\app\\Jordi.vzev.csproj",
+      "projectPath": "D:\\git\\Jordi.EbixAbrechnung\\Jordi.vzev\\Jordi.vzev.csproj",
       "packagesPath": "C:\\Users\\10000457\\.nuget\\packages\\",
-      "outputPath": "D:\\git\\Jordi.EbixAbrechnung\\jordi_vzev\\app\\obj\\",
+      "outputPath": "D:\\git\\Jordi.EbixAbrechnung\\Jordi.vzev\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -13,6 +13,8 @@ ENV ASPNETCORE_URLS=http://+:8082
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ZEVEBIX_DATA_DIR=/data
 ENV JORDI_VZEV_PORT=8082
+ENV HA_URL=http://homeassistant:8123
+ENV HA_TOKEN=
 
 COPY --from=build /app/publish ./
 

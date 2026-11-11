@@ -1,7 +1,7 @@
 name: Jordi.vzev
-version: "0.1.6"
+version: "0.1.7"
 slug: jordi_vzev
-description: Jordi.vzev Home Assistant Add-on (rollenbasiert)
+description: vZEV Home Assistant Add-on
 url: "https://github.com/JordiDaniel/SwissEnergyBillingCalculator"
 arch:
   - aarch64
