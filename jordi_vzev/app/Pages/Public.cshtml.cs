@@ -51,6 +51,19 @@ public sealed class PublicModel(AppStateStore store, BillingEngine engine) : Pag
             return;
         }
 
+        var lastAvailableDate = DateOnly.FromDateTime(store.MeterReadings.Max(x => x.PeriodStart));
+        if (selectedDate is null)
+        {
+            selectedDate = lastAvailableDate;
+        }
+
+        HourlyConsumption = engine.BuildHourlyConsumption(store.Config, store.MeterReadings, PropertyName, selectedDate);
+        if (HourlyConsumption is null)
+        {
+            InfoText = "Für die ausgewählte Liegenschaft sind keine Daten verfügbar.";
+            return;
+        }
+
         Day = HourlyConsumption.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
     }
 }

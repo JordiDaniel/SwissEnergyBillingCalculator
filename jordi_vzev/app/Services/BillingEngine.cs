@@ -161,16 +161,22 @@ public sealed class BillingEngine(IHttpClientFactory httpClientFactory)
         DateOnly? fromDate,
         DateOnly? toDate)
     {
-        if (string.IsNullOrWhiteSpace(propertyName))
+        if (string.IsNullOrWhiteSpace(propertyName) || config.PropertyMappings.Count == 0 || readings.Count == 0)
         {
             return null;
         }
 
-        var mapping = config.PropertyMappings.FirstOrDefault(x =>
+        var mode = NormalizeDistributionMode(config.PvDistributionMode);
+        var mappings = config.PropertyMappings
+            .OrderBy(x => x.PvPriority <= 0 ? int.MaxValue : x.PvPriority)
+            .ThenBy(x => x.PropertyName, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var target = mappings.FirstOrDefault(x =>
             string.Equals(x.PropertyName, propertyName, StringComparison.OrdinalIgnoreCase)
             && !string.IsNullOrWhiteSpace(x.GridMeterId));
 
-        if (mapping is null)
+        if (target is null)
         {
             return null;
         }
@@ -182,24 +188,56 @@ public sealed class BillingEngine(IHttpClientFactory httpClientFactory)
             (from, to) = (to, from);
         }
 
-        var gridByDay = readings
-            .Where(x => string.Equals(x.MeterId, mapping.GridMeterId, StringComparison.OrdinalIgnoreCase))
-            .Where(x => DateOnly.FromDateTime(x.PeriodStart) >= from && DateOnly.FromDateTime(x.PeriodStart) <= to)
-            .GroupBy(x => DateOnly.FromDateTime(x.PeriodStart))
-            .ToDictionary(g => g.Key, g => g.Sum(x => x.Kwh));
+        var demandByProperty = mappings.ToDictionary(x => x, x => GetMeterKwhByPeriodInRange(readings, x.GridMeterId, from, to));
+        var supplyByProducer = mappings.ToDictionary(x => x, x => GetMeterKwhByPeriodInRange(readings, x.PvMeterId, from, to));
 
-        var pvByDay = string.IsNullOrWhiteSpace(mapping.PvMeterId)
-            ? new Dictionary<DateOnly, decimal>()
-            : readings
-                .Where(x => string.Equals(x.MeterId, mapping.PvMeterId, StringComparison.OrdinalIgnoreCase))
-                .Where(x => DateOnly.FromDateTime(x.PeriodStart) >= from && DateOnly.FromDateTime(x.PeriodStart) <= to)
-                .GroupBy(x => DateOnly.FromDateTime(x.PeriodStart))
-                .ToDictionary(g => g.Key, g => g.Sum(x => x.Kwh));
+        var gridByDay = demandByProperty[target]
+            .GroupBy(x => DateOnly.FromDateTime(x.Key))
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Value));
 
-        var days = Enumerable.Range(0, to.DayNumber - from.DayNumber + 1)
-            .Select(offset => from.AddDays(offset));
+        var pvByDay = new Dictionary<DateOnly, decimal>();
+        var periods = demandByProperty.Values
+            .SelectMany(x => x.Keys)
+            .Concat(supplyByProducer.Values.SelectMany(x => x.Keys))
+            .Distinct()
+            .OrderBy(x => x)
+            .ToList();
 
-        var points = days
+        foreach (var period in periods)
+        {
+            var remainingDemand = new Dictionary<PropertyMapping, decimal>();
+            foreach (var mapping in mappings)
+            {
+                if (demandByProperty[mapping].TryGetValue(period, out var demand) && demand > 0m)
+                {
+                    remainingDemand[mapping] = demand;
+                }
+            }
+
+            foreach (var producer in mappings)
+            {
+                if (!supplyByProducer[producer].TryGetValue(period, out var availableSupply) || availableSupply <= 0m)
+                {
+                    continue;
+                }
+
+                var consumers = remainingDemand.Where(x => x.Key != producer && x.Value > 0m).Select(x => x.Key).ToList();
+                var states = mappings.ToDictionary(x => x, _ => new AllocationState());
+                _ = mode == PvDistributionModePriority
+                    ? DistributeByPriority(availableSupply, producer, consumers, remainingDemand, states)
+                    : DistributeFairShare(availableSupply, producer, consumers, remainingDemand, states);
+
+                if (states[target].PvKwh > 0m)
+                {
+                    var day = DateOnly.FromDateTime(period);
+                    pvByDay[day] = pvByDay.TryGetValue(day, out var existing) ? existing + states[target].PvKwh : states[target].PvKwh;
+                }
+            }
+        }
+
+        var points = gridByDay.Keys
+            .Union(pvByDay.Keys)
+            .OrderBy(x => x)
             .Select(day =>
             {
                 var grid = gridByDay.TryGetValue(day, out var g) ? g : 0m;
@@ -212,11 +250,12 @@ public sealed class BillingEngine(IHttpClientFactory httpClientFactory)
                     TotalKwh = grid + pv
                 };
             })
+            .Where(x => x.TotalKwh > 0m)
             .ToList();
 
         return new PropertyDailyConsumptionView
         {
-            PropertyName = mapping.PropertyName,
+            PropertyName = target.PropertyName,
             Points = points
         };
     }
@@ -695,6 +734,28 @@ public sealed class BillingEngine(IHttpClientFactory httpClientFactory)
         return readings
             .Where(x => string.Equals(x.MeterId, meterId, StringComparison.OrdinalIgnoreCase)
                         && ToMonthKey(x.PeriodStart) == month)
+            .GroupBy(x => x.PeriodStart)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Kwh));
+    }
+
+    private static Dictionary<DateTime, decimal> GetMeterKwhByPeriodInRange(
+        IEnumerable<MeterReading> readings,
+        string meterId,
+        DateOnly from,
+        DateOnly to)
+    {
+        if (string.IsNullOrWhiteSpace(meterId))
+        {
+            return [];
+        }
+
+        return readings
+            .Where(x => string.Equals(x.MeterId, meterId, StringComparison.OrdinalIgnoreCase))
+            .Where(x =>
+            {
+                var day = DateOnly.FromDateTime(x.PeriodStart);
+                return day >= from && day <= to;
+            })
             .GroupBy(x => x.PeriodStart)
             .ToDictionary(g => g.Key, g => g.Sum(x => x.Kwh));
     }

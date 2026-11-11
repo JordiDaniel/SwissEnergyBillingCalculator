@@ -39,6 +39,12 @@ public sealed class HomeAssistantEntityService(IHttpClientFactory httpClientFact
             using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
 
             var state = doc.RootElement.TryGetProperty("state", out var stateProp) ? stateProp.GetString() : null;
+            if (string.Equals(state, "unknown", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(state, "unavailable", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(state, "none", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
             string? unit = null;
             if (doc.RootElement.TryGetProperty("attributes", out var attributes) && attributes.ValueKind == JsonValueKind.Object)
             {

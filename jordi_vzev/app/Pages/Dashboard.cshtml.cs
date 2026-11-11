@@ -85,7 +85,8 @@ public class DashboardModel(AppStateStore store, BillingEngine engine, HomeAssis
                     PropertyName = rowMapping.PropertyName,
                     EntityId = rowMapping.CurrentProductionEntityId,
                     LiveValue = live?.State,
-                    Unit = live?.UnitOfMeasurement
+                    Unit = live?.UnitOfMeasurement,
+                    IsAvailable = live is not null
                 });
             }
 
@@ -94,7 +95,11 @@ public class DashboardModel(AppStateStore store, BillingEngine engine, HomeAssis
                 .OrderByDescending(x => x.MonthLabel)
                 .ToList();
 
-            var (fromDate, toDate) = ResolveRange();
+            var latestDataDate = store.MeterReadings.Count > 0
+                ? DateOnly.FromDateTime(store.MeterReadings.Max(x => x.PeriodStart))
+                : DateOnly.FromDateTime(DateTime.Today.AddDays(-1));
+
+            var (fromDate, toDate) = ResolveRange(latestDataDate);
             var daily = engine.BuildDailyConsumption(store.Config, store.MeterReadings, PropertyName, fromDate, toDate);
             if (daily is not null)
             {
@@ -109,13 +114,11 @@ public class DashboardModel(AppStateStore store, BillingEngine engine, HomeAssis
         return Page();
     }
 
-    private (DateOnly from, DateOnly to) ResolveRange()
+    private (DateOnly from, DateOnly to) ResolveRange(DateOnly latestDataDate)
     {
-        var today = DateOnly.FromDateTime(DateTime.Today);
-
         if (string.Equals(Range, "today", StringComparison.OrdinalIgnoreCase))
         {
-            return (today, today);
+            return (latestDataDate, latestDataDate);
         }
 
         if (string.Equals(Range, "custom", StringComparison.OrdinalIgnoreCase)
@@ -125,7 +128,7 @@ public class DashboardModel(AppStateStore store, BillingEngine engine, HomeAssis
             return from <= to ? (from, to) : (to, from);
         }
 
-        return (today.AddDays(-6), today);
+        return (latestDataDate.AddDays(-6), latestDataDate);
     }
 }
 
@@ -135,4 +138,5 @@ public sealed class PropertyProductionLiveRow
     public string EntityId { get; init; } = string.Empty;
     public string? LiveValue { get; init; }
     public string? Unit { get; init; }
+    public bool IsAvailable { get; init; }
 }
