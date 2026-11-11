@@ -139,17 +139,32 @@
                     <thead>
                     <tr>
                         <th>Liegenschaft</th>
-                        <th>HA Entität</th>
                         <th class="text-end">Livewert</th>
                     </tr>
                     </thead>
                     <tbody>
                     @foreach (var row in Model.AllPropertyProductionRows)
                     {
+                        var liveValueText = "Sensor nicht verfügbar";
+                        if (row.IsAvailable)
+                        {
+                            var hasValue = decimal.TryParse(row.LiveValue, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var parsed)
+                                           || decimal.TryParse(row.LiveValue, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out parsed);
+
+                            if (hasValue)
+                            {
+                                var normalized = parsed < 0m ? 0m : parsed;
+                                liveValueText = $"{normalized:N0} {row.Unit}".Trim();
+                            }
+                            else
+                            {
+                                liveValueText = $"{row.LiveValue} {row.Unit}".Trim();
+                            }
+                        }
+
                         <tr>
                             <td>@row.PropertyName</td>
-                            <td>@row.EntityId</td>
-                            <td class="text-end">@(row.IsAvailable ? $"{row.LiveValue} {row.Unit}".Trim() : "Sensor nicht verfügbar")</td>
+                            <td class="text-end">@liveValueText</td>
                         </tr>
                     }
                     </tbody>
