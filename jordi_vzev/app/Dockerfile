@@ -15,6 +15,8 @@ WORKDIR /app
 
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
+ENV HA_URL=http://homeassistant:8123
+ENV HA_TOKEN=
 
 COPY --from=build /app/publish ./
 

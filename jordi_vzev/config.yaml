@@ -1,5 +1,5 @@
 name: Jordi.vzev
-version: "0.1.9"
+version: "0.1.10"
 slug: jordi_vzev
 description: vZEV Home Assistant Add-on
 url: "https://github.com/JordiDaniel/SwissEnergyBillingCalculator"
@@ -25,6 +25,7 @@ options:
   ha_url: "http://192.168.178.60:8123"
   ha_token: ""
   users: []
+  api_reload_token: ""
 schema:
   ha_url: str
   ha_token: password
@@ -33,3 +34,4 @@ schema:
       password: password
       role: list(admin|property_user)
       property: str?
+  api_reload_token: password?
