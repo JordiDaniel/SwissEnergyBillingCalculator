@@ -617,7 +617,7 @@ public sealed class BillingEngine(IHttpClientFactory httpClientFactory)
                 continue;
             }
 
-            timestamp = NormalizeToQuarterHour(timestamp);
+            timestamp = NormalizeCsvPeriodEndToPeriodStart(timestamp);
             foreach (var column in meterColumns)
             {
                 if (column.ColumnIndex >= row.Length)
@@ -747,6 +747,12 @@ public sealed class BillingEngine(IHttpClientFactory httpClientFactory)
     {
         var roundedMinute = (value.Minute / 15) * 15;
         return new DateTime(value.Year, value.Month, value.Day, value.Hour, roundedMinute, 0, value.Kind);
+    }
+
+    private static DateTime NormalizeCsvPeriodEndToPeriodStart(DateTime value)
+    {
+        var normalizedEnd = NormalizeToQuarterHour(value);
+        return normalizedEnd.AddMinutes(-15);
     }
 
     private static string ToMonthKey(DateTime value)
