@@ -1,5 +1,5 @@
 name: vZEV billing
-version: "1.0.4"
+version: "1.0.5"
 slug: jordi_vzev
 description: vZEV billing
 url: "https://github.com/JordiDaniel/SwissEnergyBillingCalculator"
@@ -14,9 +14,9 @@ ingress: false
 panel_icon: mdi:flash
 panel_title: vZEV billing
 hassio_api: false
-homeassistant_api: true
+homeassistant_api: false
 map:
-  - share:rw
+  - share:ro
 ports:
   8082/tcp: 8082
 ports_description:
