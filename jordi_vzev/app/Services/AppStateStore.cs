@@ -38,7 +38,7 @@ public sealed class AppStateStore(BillingEngine engine, IWebHostEnvironment env)
             }
 
             NormalizePriorities();
-            EnsureMonthlyPricesForYear(DateTime.UtcNow.Year);
+            EnsureCurrentMonthPrice();
         }
         finally
         {
@@ -121,18 +121,22 @@ public sealed class AppStateStore(BillingEngine engine, IWebHostEnvironment env)
             }
         }
 
+        EnsureCurrentMonthPrice();
         Config.MonthlyPrices = Config.MonthlyPrices.OrderBy(x => x.MonthKey, StringComparer.Ordinal).ToList();
     }
 
-    private void EnsureMonthlyPricesForYear(int year)
+    private void EnsureCurrentMonthPrice()
     {
-        for (var month = 1; month <= 12; month++)
+        var key = DateTime.UtcNow.ToString("yyyy-MM");
+        if (Config.MonthlyPrices.All(x => !string.Equals(x.MonthKey, key, StringComparison.Ordinal)))
         {
-            var key = $"{year:D4}-{month:D2}";
-            if (Config.MonthlyPrices.All(x => !string.Equals(x.MonthKey, key, StringComparison.Ordinal)))
+            Config.MonthlyPrices.Add(new MonthlyPrice
             {
-                Config.MonthlyPrices.Add(new MonthlyPrice { MonthKey = key });
-            }
+                MonthKey = key,
+                GridPricePerKwh = 0.25m,
+                PvPricePerKwh = 0.165m,
+                FeedInTariffPerKwh = 0.08m
+            });
         }
 
         Config.MonthlyPrices = Config.MonthlyPrices.OrderBy(x => x.MonthKey, StringComparer.Ordinal).ToList();

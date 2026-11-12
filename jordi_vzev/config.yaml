@@ -1,7 +1,7 @@
-name: Jordi.vzev
-version: "1.0.3"
+name: vZEV billing
+version: "1.0.4"
 slug: jordi_vzev
-description: vZEV Home Assistant Add-on
+description: vZEV billing
 url: "https://github.com/JordiDaniel/SwissEnergyBillingCalculator"
 arch:
   - aarch64
@@ -12,7 +12,7 @@ boot: auto
 init: false
 ingress: false
 panel_icon: mdi:flash
-panel_title: Jordi.vzev
+panel_title: vZEV billing
 hassio_api: false
 homeassistant_api: true
 map:
@@ -20,7 +20,7 @@ map:
 ports:
   8082/tcp: 8082
 ports_description:
-  8082/tcp: Jordi.vzev Web App
+  8082/tcp: vZEV billing Web App
 options:
   ha_url: "http://192.168.178.60:8123"
   ha_token: ""
