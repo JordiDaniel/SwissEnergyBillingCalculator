@@ -109,43 +109,47 @@
 
             @if (Model.Mode == "day")
             {
-                <div class="col-md-1 d-grid">
+                <div class="col-auto">
                     <label class="form-label d-none d-md-block">&nbsp;</label>
-                    <a class="btn btn-outline-secondary btn-sm" asp-page="/Dashboard" asp-route-property="@Model.PropertyName" asp-route-mode="day" asp-route-day="@Model.PrevDay.ToString("yyyy-MM-dd")">&lt;</a>
+                    <a class="btn btn-outline-secondary btn-sm px-2" asp-page="/Dashboard" asp-route-property="@Model.PropertyName" asp-route-mode="day" asp-route-day="@Model.PrevDay.ToString("yyyy-MM-dd")">&lt;</a>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Tag</label>
                     <input class="form-control" type="date" name="day" value="@Model.SelectedDay.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
                 </div>
-                <div class="col-md-1 d-grid">
+                <div class="col-auto">
                     <label class="form-label d-none d-md-block">&nbsp;</label>
-                    <a class="btn btn-outline-secondary btn-sm" asp-page="/Dashboard" asp-route-property="@Model.PropertyName" asp-route-mode="day" asp-route-day="@Model.NextDay.ToString("yyyy-MM-dd")">&gt;</a>
+                    <a class="btn btn-outline-secondary btn-sm px-2" asp-page="/Dashboard" asp-route-property="@Model.PropertyName" asp-route-mode="day" asp-route-day="@Model.NextDay.ToString("yyyy-MM-dd")">&gt;</a>
                 </div>
             }
             else if (Model.Mode == "week")
             {
+                <div class="col-auto">
+                    <label class="form-label d-none d-md-block">&nbsp;</label>
+                    <a class="btn btn-outline-secondary btn-sm px-2" asp-page="/Dashboard" asp-route-property="@Model.PropertyName" asp-route-mode="week" asp-route-year="@Model.PrevWeekYear" asp-route-week="@Model.PrevWeek">&lt;</a>
+                </div>
                 <div class="col-md-3">
                     <label class="form-label">Woche</label>
                     <input class="form-control" type="week" name="weekValue" value="@Model.SelectedWeekValue" onchange="this.form.submit()" />
                 </div>
-                <div class="col-md-1 d-grid">
-                    <a class="btn btn-outline-secondary btn-sm" asp-page="/Dashboard" asp-route-property="@Model.PropertyName" asp-route-mode="week" asp-route-year="@Model.PrevWeekYear" asp-route-week="@Model.PrevWeek">&lt;</a>
-                </div>
-                <div class="col-md-1 d-grid">
-                    <a class="btn btn-outline-secondary btn-sm" asp-page="/Dashboard" asp-route-property="@Model.PropertyName" asp-route-mode="week" asp-route-year="@Model.NextWeekYear" asp-route-week="@Model.NextWeek">&gt;</a>
+                <div class="col-auto">
+                    <label class="form-label d-none d-md-block">&nbsp;</label>
+                    <a class="btn btn-outline-secondary btn-sm px-2" asp-page="/Dashboard" asp-route-property="@Model.PropertyName" asp-route-mode="week" asp-route-year="@Model.NextWeekYear" asp-route-week="@Model.NextWeek">&gt;</a>
                 </div>
             }
             else if (Model.Mode == "month")
             {
+                <div class="col-auto">
+                    <label class="form-label d-none d-md-block">&nbsp;</label>
+                    <a class="btn btn-outline-secondary btn-sm px-2" asp-page="/Dashboard" asp-route-property="@Model.PropertyName" asp-route-mode="month" asp-route-year="@(Model.SelectedYear - 1)">&lt;</a>
+                </div>
                 <div class="col-md-2">
                     <label class="form-label">Jahr</label>
                     <input class="form-control" type="number" name="year" value="@Model.SelectedYear" onchange="this.form.submit()" />
                 </div>
-                <div class="col-md-1 d-grid">
-                    <button class="btn btn-outline-secondary btn-sm" type="submit" name="year" value="@(Model.SelectedYear - 1)">&lt;</button>
-                </div>
-                <div class="col-md-1 d-grid">
-                    <button class="btn btn-outline-secondary btn-sm" type="submit" name="year" value="@(Model.SelectedYear + 1)">&gt;</button>
+                <div class="col-auto">
+                    <label class="form-label d-none d-md-block">&nbsp;</label>
+                    <a class="btn btn-outline-secondary btn-sm px-2" asp-page="/Dashboard" asp-route-property="@Model.PropertyName" asp-route-mode="month" asp-route-year="@(Model.SelectedYear + 1)">&gt;</a>
                 </div>
             }
 
