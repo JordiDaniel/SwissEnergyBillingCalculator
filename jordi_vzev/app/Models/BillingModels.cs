@@ -78,6 +78,23 @@ public sealed class PropertyDailyConsumptionView
     public List<PropertyDailyConsumptionPoint> Points { get; init; } = [];
 }
 
+public enum ConsumptionGrouping
+{
+    Hour,
+    Day,
+    Month,
+    Year
+}
+
+public sealed class ConsumptionSeriesPoint
+{
+    public required DateTime SortKey { get; init; }
+    public required string Label { get; init; }
+    public decimal GridKwh { get; init; }
+    public decimal PvKwh { get; init; }
+    public decimal TotalKwh => GridKwh + PvKwh;
+}
+
 public sealed class BillingLoadResult
 {
     public required List<MeterReading> Readings { get; init; }

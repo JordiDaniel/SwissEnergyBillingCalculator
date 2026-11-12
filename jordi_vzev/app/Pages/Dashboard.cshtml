@@ -4,12 +4,36 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="h4 mb-0">Liegenschaft Dashboard</h2>
-    <form method="post" asp-page="/Logout">
-        @Html.AntiForgeryToken()
-        <button class="btn btn-outline-secondary btn-sm" type="submit">Abmelden</button>
-    </form>
+<div class="d-flex justify-content-between align-items-start mb-3 gap-3 flex-wrap">
+    <div>
+        <h2 class="h4 mb-1">Liegenschaft Dashboard</h2>
+        <form method="post" asp-page="/Logout">
+            @Html.AntiForgeryToken()
+            <button class="btn btn-outline-secondary btn-sm" type="submit">Abmelden</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-body py-2 px-3">
+            <h6 class="card-title mb-2">PV Produktion (Live)</h6>
+            @if (Model.AllPropertyProductionRows.Count == 0)
+            {
+                <div class="text-muted small">Keine Live-Entitäten konfiguriert.</div>
+            }
+            else
+            {
+                <div class="small">
+                    @foreach (var row in Model.AllPropertyProductionRows)
+                    {
+                        <div class="d-flex justify-content-between gap-3">
+                            <span>@row.PropertyName</span>
+                            <span class="fw-semibold">@row.LiveKw.ToString("N1") kW</span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
 </div>
 
 @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
@@ -57,8 +81,9 @@
 
 <div class="card mb-3">
     <div class="card-body">
-        <h5 class="card-title">Tagesverbrauch (Netz/PV)</h5>
-        <form method="get" class="row g-2 mb-3">
+        <h5 class="card-title">Tagesverbrauch</h5>
+
+        <form method="get" class="row g-2 align-items-end mb-3">
             @if (User.IsInRole("admin"))
             {
                 <div class="col-md-3">
@@ -71,42 +96,81 @@
                     </select>
                 </div>
             }
-            <div class="col-md-3">
+
+            <div class="col-md-2">
                 <label class="form-label">Filter</label>
-                <select class="form-select" name="range" onchange="this.form.submit()">
-                    <option value="today" selected="@(Model.Range == "today")">Aktueller Tag</option>
-                    <option value="7days" selected="@(Model.Range == "7days")">Letzte 7 Tage</option>
-                    <option value="custom" selected="@(Model.Range == "custom")">Zeitraum</option>
+                <select class="form-select" name="mode" onchange="this.form.submit()">
+                    <option value="day" selected="@(Model.Mode == "day")">Tag</option>
+                    <option value="week" selected="@(Model.Mode == "week")">Woche</option>
+                    <option value="month" selected="@(Model.Mode == "month")">Monat</option>
+                    <option value="year" selected="@(Model.Mode == "year")">Jahr</option>
                 </select>
             </div>
-            <div class="col-md-3">
-                <label class="form-label">Von</label>
-                <input class="form-control" type="date" name="from" value="@Model.From" />
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Bis</label>
-                <input class="form-control" type="date" name="to" value="@Model.To" />
-            </div>
-            <div class="col-md-3 d-flex align-items-end">
-                <button class="btn btn-primary w-100" type="submit">Anzeigen</button>
+
+            @if (Model.Mode == "day")
+            {
+                <div class="col-md-2">
+                    <label class="form-label">Tag</label>
+                    <input class="form-control" type="date" name="day" value="@Model.SelectedDay.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-1 d-grid">
+                    <button class="btn btn-outline-secondary" type="submit" name="day" value="@Model.PrevDay.ToString("yyyy-MM-dd")">◀</button>
+                </div>
+                <div class="col-md-1 d-grid">
+                    <button class="btn btn-outline-secondary" type="submit" name="day" value="@Model.NextDay.ToString("yyyy-MM-dd")">▶</button>
+                </div>
+            }
+            else if (Model.Mode == "week")
+            {
+                <div class="col-md-3">
+                    <label class="form-label">Woche</label>
+                    <input class="form-control" type="week" name="weekValue" value="@Model.SelectedWeekValue" />
+                </div>
+                <div class="col-md-1 d-grid">
+                    <a class="btn btn-outline-secondary" asp-page="/Dashboard" asp-route-property="@Model.PropertyName" asp-route-mode="week" asp-route-year="@Model.PrevWeekYear" asp-route-week="@Model.PrevWeek">◀</a>
+                </div>
+                <div class="col-md-1 d-grid">
+                    <a class="btn btn-outline-secondary" asp-page="/Dashboard" asp-route-property="@Model.PropertyName" asp-route-mode="week" asp-route-year="@Model.NextWeekYear" asp-route-week="@Model.NextWeek">▶</a>
+                </div>
+            }
+            else if (Model.Mode == "month")
+            {
+                <div class="col-md-2">
+                    <label class="form-label">Jahr</label>
+                    <input class="form-control" type="number" name="year" value="@Model.SelectedYear" />
+                </div>
+                <div class="col-md-1 d-grid">
+                    <button class="btn btn-outline-secondary" type="submit" name="year" value="@(Model.SelectedYear - 1)">◀</button>
+                </div>
+                <div class="col-md-1 d-grid">
+                    <button class="btn btn-outline-secondary" type="submit" name="year" value="@(Model.SelectedYear + 1)">▶</button>
+                </div>
+            }
+
+            <div class="col-md-2 d-grid">
+                <button class="btn btn-primary" type="submit">Anzeigen</button>
             </div>
         </form>
+
+        <div style="height: 280px;" class="mb-3">
+            <canvas id="consumptionChart"></canvas>
+        </div>
 
         <div class="table-responsive">
             <table class="table table-sm table-hover">
                 <thead>
                 <tr>
-                    <th>Datum</th>
+                    <th>Periode</th>
                     <th class="text-end">Netz kWh</th>
                     <th class="text-end">PV kWh</th>
                     <th class="text-end">Total kWh</th>
                 </tr>
                 </thead>
                 <tbody>
-                @foreach (var point in Model.DailyPoints)
+                @foreach (var point in Model.ConsumptionPoints)
                 {
                     <tr>
-                        <td>@point.Date.ToString("dd.MM.yyyy")</td>
+                        <td>@point.Label</td>
                         <td class="text-end">@point.GridKwh.ToString("N3")</td>
                         <td class="text-end">@point.PvKwh.ToString("N3")</td>
                         <td class="text-end">@point.TotalKwh.ToString("N3")</td>
@@ -115,62 +179,6 @@
                 </tbody>
             </table>
         </div>
-
-        <div class="mt-3">
-            <h6>Diagramm (Balken)</h6>
-            <div style="height: 280px;">
-                <canvas id="dailyChart"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="card">
-    <div class="card-body">
-        <h5 class="card-title">PV Produktion aller Liegenschaften (Live)</h5>
-        @if (Model.AllPropertyProductionRows.Count == 0)
-        {
-            <div class="text-muted">Keine Liegenschaft mit konfigurierter HA-Entität gefunden.</div>
-        }
-        else
-        {
-            <div class="table-responsive">
-                <table class="table table-sm table-striped mb-0">
-                    <thead>
-                    <tr>
-                        <th>Liegenschaft</th>
-                        <th class="text-end">Livewert</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach (var row in Model.AllPropertyProductionRows)
-                    {
-                        var liveValueText = "Sensor nicht verfügbar";
-                        if (row.IsAvailable)
-                        {
-                            var hasValue = decimal.TryParse(row.LiveValue, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var parsed)
-                                           || decimal.TryParse(row.LiveValue, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out parsed);
-
-                            if (hasValue)
-                            {
-                                var normalized = parsed < 0m ? 0m : parsed;
-                                liveValueText = $"{normalized:N0} {row.Unit}".Trim();
-                            }
-                            else
-                            {
-                                liveValueText = $"{row.LiveValue} {row.Unit}".Trim();
-                            }
-                        }
-
-                        <tr>
-                            <td>@row.PropertyName</td>
-                            <td class="text-end">@liveValueText</td>
-                        </tr>
-                    }
-                    </tbody>
-                </table>
-            </div>
-        }
     </div>
 </div>
 
@@ -178,11 +186,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         (() => {
-            const labels = [@Html.Raw(string.Join(",", Model.DailyPoints.Select(x => $"\"{x.Date:dd.MM}\"")))];
-            const grid = [@Html.Raw(string.Join(",", Model.DailyPoints.Select(x => x.GridKwh.ToString(System.Globalization.CultureInfo.InvariantCulture))))];
-            const pv = [@Html.Raw(string.Join(",", Model.DailyPoints.Select(x => x.PvKwh.ToString(System.Globalization.CultureInfo.InvariantCulture))))];
+            const labels = [@Html.Raw(string.Join(",", Model.ConsumptionPoints.Select(x => $"\"{x.Label}\"")))];
+            const grid = [@Html.Raw(string.Join(",", Model.ConsumptionPoints.Select(x => x.GridKwh.ToString(System.Globalization.CultureInfo.InvariantCulture))))];
+            const pv = [@Html.Raw(string.Join(",", Model.ConsumptionPoints.Select(x => x.PvKwh.ToString(System.Globalization.CultureInfo.InvariantCulture))))];
 
-            const canvas = document.getElementById('dailyChart');
+            const canvas = document.getElementById('consumptionChart');
             if (!canvas) return;
 
             new Chart(canvas, {

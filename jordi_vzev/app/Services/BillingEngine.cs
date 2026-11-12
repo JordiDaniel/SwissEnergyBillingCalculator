@@ -161,9 +161,49 @@ public sealed class BillingEngine(IHttpClientFactory httpClientFactory)
         DateOnly? fromDate,
         DateOnly? toDate)
     {
-        if (string.IsNullOrWhiteSpace(propertyName) || config.PropertyMappings.Count == 0 || readings.Count == 0)
+        if (readings.Count == 0)
         {
             return null;
+        }
+
+        var rangeStart = fromDate ?? DateOnly.FromDateTime(readings.Min(x => x.PeriodStart));
+        var rangeEnd = toDate ?? DateOnly.FromDateTime(readings.Max(x => x.PeriodStart));
+
+        var points = BuildConsumptionSeries(config, readings, propertyName, rangeStart, rangeEnd, ConsumptionGrouping.Day);
+        if (points.Count == 0)
+        {
+            return null;
+        }
+
+        return new PropertyDailyConsumptionView
+        {
+            PropertyName = propertyName,
+            Points = points.Select(x => new PropertyDailyConsumptionPoint
+            {
+                Date = DateOnly.FromDateTime(x.SortKey),
+                GridKwh = x.GridKwh,
+                PvKwh = x.PvKwh,
+                TotalKwh = x.TotalKwh
+            }).ToList()
+        };
+    }
+
+    public List<ConsumptionSeriesPoint> BuildConsumptionSeries(
+        AppConfig config,
+        IReadOnlyCollection<MeterReading> readings,
+        string propertyName,
+        DateOnly fromDate,
+        DateOnly toDate,
+        ConsumptionGrouping grouping)
+    {
+        if (string.IsNullOrWhiteSpace(propertyName) || config.PropertyMappings.Count == 0 || readings.Count == 0)
+        {
+            return [];
+        }
+
+        if (fromDate > toDate)
+        {
+            (fromDate, toDate) = (toDate, fromDate);
         }
 
         var mode = NormalizeDistributionMode(config.PvDistributionMode);
@@ -178,24 +218,20 @@ public sealed class BillingEngine(IHttpClientFactory httpClientFactory)
 
         if (target is null)
         {
-            return null;
+            return [];
         }
 
-        var from = fromDate ?? DateOnly.FromDateTime(DateTime.Today.AddDays(-6));
-        var to = toDate ?? DateOnly.FromDateTime(DateTime.Today);
-        if (from > to)
+        var demandByProperty = mappings.ToDictionary(x => x, x => GetMeterKwhByPeriodInRange(readings, x.GridMeterId, fromDate, toDate));
+        var supplyByProducer = mappings.ToDictionary(x => x, x => GetMeterKwhByPeriodInRange(readings, x.PvMeterId, fromDate, toDate));
+
+        var gridByBucket = new Dictionary<DateTime, decimal>();
+        foreach (var kv in demandByProperty[target])
         {
-            (from, to) = (to, from);
+            var bucket = ToBucketStart(kv.Key, grouping);
+            gridByBucket[bucket] = gridByBucket.TryGetValue(bucket, out var existing) ? existing + kv.Value : kv.Value;
         }
 
-        var demandByProperty = mappings.ToDictionary(x => x, x => GetMeterKwhByPeriodInRange(readings, x.GridMeterId, from, to));
-        var supplyByProducer = mappings.ToDictionary(x => x, x => GetMeterKwhByPeriodInRange(readings, x.PvMeterId, from, to));
-
-        var gridByDay = demandByProperty[target]
-            .GroupBy(x => DateOnly.FromDateTime(x.Key))
-            .ToDictionary(g => g.Key, g => g.Sum(x => x.Value));
-
-        var pvByDay = new Dictionary<DateOnly, decimal>();
+        var pvByBucket = new Dictionary<DateTime, decimal>();
         var periods = demandByProperty.Values
             .SelectMany(x => x.Keys)
             .Concat(supplyByProducer.Values.SelectMany(x => x.Keys))
@@ -229,35 +265,29 @@ public sealed class BillingEngine(IHttpClientFactory httpClientFactory)
 
                 if (states[target].PvKwh > 0m)
                 {
-                    var day = DateOnly.FromDateTime(period);
-                    pvByDay[day] = pvByDay.TryGetValue(day, out var existing) ? existing + states[target].PvKwh : states[target].PvKwh;
+                    var bucket = ToBucketStart(period, grouping);
+                    pvByBucket[bucket] = pvByBucket.TryGetValue(bucket, out var existing) ? existing + states[target].PvKwh : states[target].PvKwh;
                 }
             }
         }
 
-        var points = gridByDay.Keys
-            .Union(pvByDay.Keys)
+        return gridByBucket.Keys
+            .Union(pvByBucket.Keys)
             .OrderBy(x => x)
-            .Select(day =>
+            .Select(bucket =>
             {
-                var grid = gridByDay.TryGetValue(day, out var g) ? g : 0m;
-                var pv = pvByDay.TryGetValue(day, out var p) ? p : 0m;
-                return new PropertyDailyConsumptionPoint
+                var grid = gridByBucket.TryGetValue(bucket, out var g) ? g : 0m;
+                var pv = pvByBucket.TryGetValue(bucket, out var p) ? p : 0m;
+                return new ConsumptionSeriesPoint
                 {
-                    Date = day,
+                    SortKey = bucket,
+                    Label = FormatBucketLabel(bucket, grouping),
                     GridKwh = grid,
-                    PvKwh = pv,
-                    TotalKwh = grid + pv
+                    PvKwh = pv
                 };
             })
             .Where(x => x.TotalKwh > 0m)
             .ToList();
-
-        return new PropertyDailyConsumptionView
-        {
-            PropertyName = target.PropertyName,
-            Points = points
-        };
     }
 
     public List<SummaryRow> BuildSummary(AppConfig config, IReadOnlyCollection<MeterReading> readings, string? selectedMonth)
@@ -722,6 +752,30 @@ public sealed class BillingEngine(IHttpClientFactory httpClientFactory)
     private static string ToMonthKey(DateTime value)
     {
         return value.ToString("yyyy-MM", CultureInfo.InvariantCulture);
+    }
+
+    private static DateTime ToBucketStart(DateTime value, ConsumptionGrouping grouping)
+    {
+        return grouping switch
+        {
+            ConsumptionGrouping.Hour => new DateTime(value.Year, value.Month, value.Day, value.Hour, 0, 0, value.Kind),
+            ConsumptionGrouping.Day => value.Date,
+            ConsumptionGrouping.Month => new DateTime(value.Year, value.Month, 1, 0, 0, 0, value.Kind),
+            ConsumptionGrouping.Year => new DateTime(value.Year, 1, 1, 0, 0, 0, value.Kind),
+            _ => value.Date
+        };
+    }
+
+    private static string FormatBucketLabel(DateTime bucket, ConsumptionGrouping grouping)
+    {
+        return grouping switch
+        {
+            ConsumptionGrouping.Hour => bucket.ToString("HH:00", CultureInfo.InvariantCulture),
+            ConsumptionGrouping.Day => bucket.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture),
+            ConsumptionGrouping.Month => bucket.ToString("MMM yyyy", CultureInfo.InvariantCulture),
+            ConsumptionGrouping.Year => bucket.ToString("yyyy", CultureInfo.InvariantCulture),
+            _ => bucket.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture)
+        };
     }
 
     private static Dictionary<DateTime, decimal> GetMeterKwhByPeriod(IEnumerable<MeterReading> readings, string meterId, string month)
